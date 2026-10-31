@@ -13,7 +13,7 @@ p{margin:.3em 0;opacity:.9;font-size:15px}
 button{font-family:inherit;font-size:17px;background:#1b2433;color:#e8dcc8;border:2px solid #4a6a96;border-radius:8px;padding:10px 22px;margin:6px;min-width:170px}
 button:active{background:#2c3e5c}
 button.red{border-color:#b3121b;background:#2a0d10}
-#title{background:#05060a}#title>*{position:relative;z-index:2}#title>#tv,#title>#tshade{position:absolute;inset:0;width:100%;height:100%;z-index:0}#tv{object-fit:cover;display:none}#title.vid #tv{display:block}#tshade{background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85));display:none}#title.vid #tshade{display:block}#title.vid h1{visibility:hidden}#title.vid{justify-content:flex-end;padding-bottom:calc(36px + env(safe-area-inset-bottom))}
+#title{background:#05060a}#title>*{position:relative;z-index:2}#title>#tv,#title>#tshade{position:absolute;inset:0;width:100%;height:100%;z-index:0}#tv{object-fit:cover;display:none}#title.vid #tv{display:block}#tshade{background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85));display:none}#title.vid #tshade{display:block}#title.vid h1{visibility:hidden}#title.vid{justify-content:flex-end;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 #tsnd{position:absolute!important;top:calc(10px + env(safe-area-inset-top));right:10px;min-width:0;width:44px;height:44px;padding:0;font-size:20px;display:none;background:rgba(10,12,18,.6)}#title.vid #tsnd{display:block}
 #raven{font-size:44px;cursor:pointer;padding:6px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;max-width:620px;width:100%}
@@ -39,10 +39,9 @@ button.red{border-color:#b3121b;background:#2a0d10}
 </div>
 <div id="title" class="ov on"><video id="tv" muted playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F507;</button>
  <div id="raven" title="raven">&#x1F426;&#x200D;&#x2B1B;</div>
- <h1>BERSERKER</h1><p>Rage. Survive. Reach Valhalla.</p>
- <p id="best"></p>
+ <h1>BERSERKER</h1>
+ <p id="best" style="display:none"></p>
  <button class="red" id="play">FIGHT</button>
- <p style="font-size:12px;opacity:.6">Touch: tap or drag to walk, auto-attack, pinch or +/&minus; to zoom &middot; Keys: WASD/arrows, J extra attack, K heavy, Shift block, Space dash, L Thor, Esc pause</p>
 </div>
 <div id="cheat" class="ov"><h2>Raven's Secrets</h2>
  <button id="cInv">Invincibility: OFF</button><button id="cFF">Fast Forward: OFF</button><button id="cBoss">Skip to Boss: OFF</button>
