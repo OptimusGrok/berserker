@@ -86,7 +86,7 @@ function bakeAxe(){if(!AC||AXB)return;const sr=AC.sampleRate,mk=(d,fn)=>{const n
    a[i]=Math.sin(ph)*ev(t,.002,.07)+l(rn())*2.2*ev(t,.001,.025)*.8+b(rn(),420,6)*ev(t,.001,.06)*.6}});
  AXB=[aL,aI]}
 let AXA=null,AXAt=0;function loadAXA(){if(AXA||AXAt||!AC)return;AXAt=1;try{fetch('axe_a.mp3?v=2').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((ok,no)=>{const q=AC.decodeAudioData(b,ok,no);if(q&&q.then)q.then(ok,no)})).then(d=>{AXA=d}).catch(()=>{AXAt=0})}catch(e){AXAt=0}}
-function axeSnd(part){if(part||!AC||!sfxOn)return;if(!AXA){loadAXA();return}const s=AC.createBufferSource(),g=AC.createGain();s.buffer=AXA;g.gain.value=.1;s.connect(g);g.connect(sfxG);s.start()}
+function axeSnd(part){if(part||!AC||!sfxOn)return;if(!AXA){loadAXA();return}const s=AC.createBufferSource(),g=AC.createGain();s.buffer=AXA;g.gain.value=.16;s.connect(g);g.connect(sfxG);s.start()}
 const S={roar2(){noise(.7,.5,500);tone(110,.6,'sawtooth',.25,70);tone(165,.5,'sawtooth',.15,90);noise(.3,.3,2200)},thunder(){noise(.12,.9,5000);noise(1.1,.6,320);tone(70,.7,'sawtooth',.25,28)},swing(){noise(.12,.25,2500)},hit(){noise(.1,.4,900);tone(140,.1,'square',.15,60)},heavy(){noise(.25,.5,600);tone(90,.25,'sawtooth',.25,40)},hurt(){tone(220,.2,'sawtooth',.25,80)},block(){tone(900,.08,'square',.12,500);noise(.05,.2,4000)},dash(){noise(.15,.2,3000)},coin(){tone(1200,.08,'triangle',.12,1800)},lvl(){[440,554,660,880].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.18),i*80))},thor(){noise(.8,.7,3000);tone(60,.8,'sawtooth',.35,30)},roar(){tone(110,.9,'sawtooth',.3,50);noise(.9,.3,500)},die(){tone(70,.3,'square',.2,40)}};
 let musT=0,step=0,musTimer=null;
 // ---------- streamed stage music (Village) ----------
