@@ -501,7 +501,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
   else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;
    pax.push({rg:P.rage>0,x:P.x+Math.cos(a)*8,y:P.y-4+Math.sin(a)*8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:rng/sp,rot:0,spin:Math.cos(a)<0?-22:22,w:P.weapon,pierce:1+P.b.pierce,hit:new Set()});
    axeSnd(0)}}
- for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*t.spin;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,10*({axe:1,battle:1.15,hammer:1.35,rune:.95}[t.w])*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15)*(t.rg?2:1),Math.atan2(t.vy,t.vx),t.w=='hammer'?90:50,false);hitstop=Math.max(hitstop,.02);t.imp=1;if(--t.pierce<=0){t.l=0;break}}
+ for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*t.spin;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,10*({axe:1,battle:1.15,hammer:1.35,rune:.95}[t.w])*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15)*(t.rg?2:1),Math.atan2(t.vy,t.vx),t.w=='hammer'?90:50,false);hitstop=Math.max(hitstop,.02);if(!t.imp){t.imp=1;axeSnd(1)}if(--t.pierce<=0){t.l=0;break}}
   for(const b of obs)if(t.l>0&&Math.hypot(b.x-t.x,b.y-t.y)<b.r){t.l=0;if(!t.imp){t.imp=1;axeSnd(1)}}if(t.l<=0)for(let i=0;i<10;i++)parts.push({x:t.x,y:t.y,vx:(R()-.5)*240,vy:(R()-.5)*240,l:.3+R()*.2,c:t.rg?(i%2?'#ff3a20':'#ffb080'):i%2?'#ffe08a':t.w=='rune'?'#9fd8ff':'#dfe6ee',s:2})}
  pax=pax.filter(t=>t.l>0);
  const spd=P.spd*(1+P.b.swift*.1)*(P.blocking?.4:1)*(P.atkT>0?.45:1)*(P.slowT>0?.55:1);
