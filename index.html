@@ -124,14 +124,14 @@ const WEAPONS={axe:{n:'Hand Axe',dmg:12,rng:46,arc:1.6,spd:.26,heavy:2.6,kb:120,
 const BLESS={vit:{n:'Vitality',d:'+25 max HP, full heal',c:30},swift:{n:'Swiftness',d:'+10% speed, faster dash',c:30},dmg:{n:'Damage',d:'+15% damage',c:35},pierce:{n:'Pierce',d:'Pierce shields, +8% crit',c:35},energy:{n:'Energy',d:'+30% energy gain',c:30}};
 const ET={skeleton:{hp:22,spd:62,r:11,dmg:8,gold:1,xp:2,col:'#d8d0b8'},zombie:{hp:45,spd:34,r:13,dmg:12,gold:1,xp:3,col:'#5f7a4a'},
  wolf:{hp:20,spd:120,r:11,dmg:7,gold:1,xp:2,col:'#6b6f78'},spider:{hp:16,spd:85,r:9,dmg:6,gold:1,xp:2,col:'#3a2a3a'},
- cyclops:{hp:180,spd:40,r:24,dmg:22,gold:8,xp:12,col:'#8a6a52'},huscarl:{hp:70,spd:50,r:14,dmg:14,gold:3,xp:5,col:'#4a5668'},
- brood:{hp:120,spd:38,r:22,dmg:16,gold:6,xp:9,col:'#4a2f3f'},
- zwolf:{hp:140,spd:95,r:17,dmg:14,gold:5,xp:8,col:'#3a3632'},gcyc:{hp:420,spd:34,r:36,dmg:20,gold:15,xp:25,col:'#4a5040'}};
-const BOSSES={jarl:{n:'The Undead Jarl',sub:'He rose from the burial mound, still hungry for war.',hp:900,r:24,spd:55,col:'#5a6a5a'},
- boneking:{n:'The Bone King',sub:'A crown of skulls. A throne of the drowned.',hp:1200,r:26,spd:40,col:'#e0d6b8'},
- queen:{n:'The Brood Queen',sub:'The caves skitter with her children.',hp:1300,r:28,spd:45,col:'#5a2848'},
- fenrir:{n:'Fenrir the Grave Hound',sub:'The chain is broken. The wolf runs free.',hp:1400,r:24,spd:150,col:'#3c4250'},
- beast:{n:'The Beast',sub:'The last horror between you and Valhalla.',hp:2200,r:34,spd:55,col:'#3a1210'}};
+ cyclops:{hp:180,spd:28,r:24,dmg:22,gold:8,xp:12,col:'#8a6a52'},huscarl:{hp:70,spd:37,r:14,dmg:14,gold:3,xp:5,col:'#4a5668'},
+ brood:{hp:120,spd:27,r:22,dmg:16,gold:6,xp:9,col:'#4a2f3f'},
+ zwolf:{hp:140,spd:70,r:17,dmg:14,gold:5,xp:8,col:'#3a3632'},gcyc:{hp:420,spd:24,r:36,dmg:20,gold:15,xp:25,col:'#4a5040'}};
+const BOSSES={jarl:{n:'The Undead Jarl',sub:'He rose from the burial mound, still hungry for war.',hp:900,r:24,spd:44,col:'#5a6a5a'},
+ boneking:{n:'The Bone King',sub:'A crown of skulls. A throne of the drowned.',hp:1200,r:26,spd:32,col:'#e0d6b8'},
+ queen:{n:'The Brood Queen',sub:'The caves skitter with her children.',hp:1300,r:28,spd:36,col:'#5a2848'},
+ fenrir:{n:'Fenrir the Grave Hound',sub:'The chain is broken. The wolf runs free.',hp:1400,r:24,spd:120,col:'#3c4250'},
+ beast:{n:'The Beast',sub:'The last horror between you and Valhalla.',hp:2200,r:34,spd:44,col:'#3a1210'}};
 const WQ=[14,16,19,22,25,28,31,35,38],WR=[1.1,1,.95,.9,.85,.8,.75,.7,.65];
 function mkSeq(mix,mini,boss){const q=[];for(let i=0;i<9;i++)q.push(i==4&&mini?{b:mini}:{w:mix[i],q:WQ[i],r:WR[i]});q.push({b:boss});return q}
 const STAGES=[{n:'The Village',sub:'Stage I',ground:['#1c1a16','#24201a'],obs:['house','tree','rock'],
