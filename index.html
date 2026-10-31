@@ -147,7 +147,7 @@ function ov(id){['title','cheat','pause','shop','dead','win'].forEach(o=>$(o).cl
 let pressed={};function edge(k,v){const r=v&&!pressed[k];pressed[k]=v;return r}
 // ---------- combat ----------
 function pdmg(){return WEAPONS[P.weapon].dmg*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)}
-function attack(heavy){const w=WEAPONS[P.weapon];if(P.atkCd>0||P.dashT>0)return;
+function attack(heavy){const w=WEAPONS[P.weapon];if(P.atkCd>0||P.dashT>0||P.resp>0)return;
  if(heavy){P.heavyT=w.spd*2.2;P.atkCd=w.spd*2.6;P.atkT=P.heavyT;P.isHeavy=true;P.hitDone=false;S.swing()}
  else{P.combo=P.comboT>0?(P.combo+1)%3:0;P.comboT=.6;P.atkT=w.spd;P.atkCd=w.spd*(P.combo==2?1.5:1);P.isHeavy=false;P.hitDone=false;S.swing()}}
 function resolveSwing(){const w=WEAPONS[P.weapon],h=P.isHeavy,rng=w.rng*(h?1.25:1)*(P.combo==2&&!h?1.15:1),arc=h?(P.weapon=='hammer'?7:w.arc*1.4):w.arc;
@@ -230,10 +230,14 @@ function update(dt){P.time+=dt;
  if(edge('D',K.Space||BT.D)&&P.dashCd<=0){P.dashT=.18;P.dashCd=.7-P.b.swift*.08;P.dashA=tgt&&dist(P,tgt)>5?ang(P,tgt):m>.15?Math.atan2(my,mx):P.face;S.dash()}
  if(m<.15&&P.atkT<=0){const n=nearest();if(n&&dist(n,P)<90)P.face=ang(P,n)}
  {const n=nearest();if((K.KeyJ||BT.A)&&P.atkCd<=0)attack(false);
-  if(n&&P.atkCd<=0&&P.dashT<=0&&dist(n,P)<WEAPONS[P.weapon].rng+n.r){P.face=ang(P,n);attack(false)}
-  P.throwCd=(P.throwCd||0)-dt;if(n&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){P.throwCd=.8;const a=ang(P,n);pax.push({x:P.x,y:P.y-4,vx:Math.cos(a)*330,vy:Math.sin(a)*330,l:1.6,rot:0,pierce:1+P.b.pierce,hit:new Set()});S.swing()}}
- for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*20;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,6*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15),Math.atan2(t.vy,t.vx),40,false);if(--t.pierce<=0){t.l=0;break}}
-  for(const b of obs)if(Math.hypot(b.x-t.x,b.y-t.y)<b.r)t.l=0}
+  const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22;tone(1400,.08,'triangle',.08,2200)}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
+  P.throwCd=(P.throwCd||0)-dt;const melee=n&&dist(n,P)<WEAPONS[P.weapon].rng+n.r;
+  if(melee&&inHand&&P.atkCd<=0&&P.dashT<=0){P.face=ang(P,n);attack(false)}
+  else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)));P.resp=.35;P.throwT=.16;
+   pax.push({x:P.x+Math.cos(a)*8,y:P.y-4+Math.sin(a)*8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:rng/sp,rot:0,spin:Math.cos(a)<0?-22:22,w:P.weapon,pierce:1+P.b.pierce,hit:new Set()});
+   noise(.18,.3,1800);tone(300,.16,'sine',.07,900)}}
+ for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*t.spin;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,10*({axe:1,battle:1.15,hammer:1.35,rune:.95}[t.w])*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15),Math.atan2(t.vy,t.vx),t.w=='hammer'?90:50,false);hitstop=Math.max(hitstop,.02);S.hit();if(--t.pierce<=0){t.l=0;break}}
+  for(const b of obs)if(Math.hypot(b.x-t.x,b.y-t.y)<b.r)t.l=0;if(t.l<=0)for(let i=0;i<10;i++)parts.push({x:t.x,y:t.y,vx:(R()-.5)*240,vy:(R()-.5)*240,l:.3+R()*.2,c:i%2?'#ffe08a':t.w=='rune'?'#9fd8ff':'#dfe6ee',s:2})}
  pax=pax.filter(t=>t.l>0);
  const spd=P.spd*(1+P.b.swift*.1)*(P.blocking?.4:1)*(P.atkT>0?.45:1)*(P.slowT>0?.55:1);
  const px0=P.x,py0=P.y;if(P.dashT>0){P.x+=Math.cos(P.dashA)*520*dt;P.y+=Math.sin(P.dashA)*520*dt;P.dashT-=dt;if(R()<.6)parts.push({x:P.x,y:P.y,vx:0,vy:0,l:.25,c:'rgba(127,180,255,.5)',s:9})}
@@ -270,7 +274,7 @@ function draw(){const t=performance.now()/1000;cx.setTransform(DPR,0,0,DPR,0,0);
  const sx=(R()-.5)*shake,sy=(R()-.5)*shake;cx.setTransform(DPR*SC,0,0,DPR*SC,DPR*(W/2-cam.x*SC+sx),DPR*(H/2-cam.y*SC+sy));
  cx.drawImage(bgC,0,0,WS,WS);cx.strokeStyle='#300';cx.lineWidth=6;cx.strokeRect(0,0,WS,WS);
  const list=[...obs.map(o=>({y:o.y,f:()=>drawObs(o,t)})),...ens.map(e=>({y:e.y,f:()=>drawEnemy(e,t)})),{y:P.y,f:()=>drawPlayer(t)}];
- for(const t of pax){const ts=SPR.throw;cx.save();cx.translate(t.x,t.y);cx.rotate(t.rot);cx.drawImage(ts.c,-ts.ox,-ts.oy,ts.w,ts.h);cx.restore()}
+ for(const t of pax){const ws=SPR.wp[t.w],h=VL(t.w)*.55;cx.save();cx.translate(t.x,t.y);cx.rotate(t.rot);cx.globalAlpha=.25;cx.drawImage(ws.c,-ws.ox-h,-ws.oy,ws.w,ws.h);cx.rotate(-t.spin*.012);cx.globalAlpha=1;cx.drawImage(ws.c,-ws.ox-h,-ws.oy,ws.w,ws.h);cx.restore()}
  for(const k of marks){cx.strokeStyle=`rgba(220,200,160,${k.l*.45})`;cx.lineWidth=1.5;cx.beginPath();cx.ellipse(k.x,k.y,4+(1-k.l)*8,(4+(1-k.l)*8)*.5,0,0,7);cx.stroke()}
  for(const c of coins){cx.fillStyle='#e0b840';cx.beginPath();cx.arc(c.x,c.y,3.5,0,7);cx.fill();cx.fillStyle='#fff6';cx.fillRect(c.x-1,c.y-2,1.5,1.5)}
  for(const p of parts)if(p.blood&&p.l<.15){}
@@ -464,7 +468,7 @@ function aBeast(c,ph,m){const s=Math.sin(ph),k=Math.cos(ph),bk='#4a1a14',bd='#0e
  F(c,[-6,-29,10,-29,8,-23+(m?3:0),-4,-23+(m?3:0)],'#1a0402');E(c,2,-26+(m?1.5:0),5,2,rgr(c,2,-26,5,'#ffd060','#ff4010'));for(let i=0;i<6;i++){F(c,[-5+i*2.6,-29,-4+i*2.6,-25.5,-3+i*2.6,-29],'#f0e8d0');F(c,[-4+i*2.4,-23+(m?3:0),-3+i*2.4,-26+(m?3:0),-2+i*2.4,-23+(m?3:0)],'#e8dcc0')}}
 function beastGlow(c){c.save();c.shadowColor='#ff8030';c.shadowBlur=8*RES;for(let i=0;i<9;i++)crack(c,-18+i*4.5,-14+(i%3)*8,14,i+70,'#ffd080',1.4);E(c,0,-6,8,6,'rgba(255,160,60,.5)');E(c,2,-26,4,1.6,'#ffe090');c.restore()}
 const VL=k=>k=='axe'?22:k=='battle'?40:WEAPONS[k].rng*.75;
-function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}SPR.throw=bake(30,30,15,c=>{c.scale(.8,.8);c.translate(-5,0);aWeapon('axe',9)(c)});
+function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}
  bakeSet('skeleton',40,46,30,aSkel);bakeSet('zombie',40,46,30,aZomb);bakeSet('wolf',56,34,20,(c,p,m)=>aWolf(c,p,m,0));bakeSet('spider',38,26,16,(c,p,m)=>aSpider(c,p,m,0));bakeSet('cyclops',76,90,58,aCyc);bakeSet('huscarl',50,52,32,aHus);bakeSet('brood',90,62,38,aBrood);
  bakeSet('jarl',96,104,72,aJarl);bakeSet('boneking',96,124,90,aBoneK);bakeSet('queen',104,90,56,(c,p,m)=>aQueen(c,p,m));bakeSet('fenrir',124,80,48,(c,p,m)=>aWolf(c,p,m,1));bakeSet('beast',150,150,98,aBeast);SPR.beastGlow=bake(150,150,98,beastGlow)}
 function frameOf(e,t){let m=0;const ty=e.type;
@@ -495,7 +499,9 @@ function drawPlayer(t){const x=P.x,y=P.y,f=P.face,w=WEAPONS[P.weapon];const mv=M
   if(p>.3&&p<.9){cx.strokeStyle=P.isHeavy?'rgba(255,80,60,.5)':P.weapon=='rune'?'rgba(127,180,255,.45)':'rgba(220,230,255,.35)';cx.lineWidth=P.isHeavy?10:6;cx.beginPath();cx.arc(x,y-2,w.rng*.9,wa-dir*.9,wa,dir<0);cx.stroke()}}
  else wa=-Math.PI/2+(flip?-.45:.45)+Math.sin(P.wph*Math.PI/2)*.08+Math.sin(t*2)*.03;
  const ws=SPR.wp[P.weapon],drawW=()=>{const bs=P.atkT>0?(P.combo%2?-1:1):(flip?-1:1),hx=x+(flip?-7:7)*(P.atkT>0?.4:1),hy=y-(P.atkT>0?3:2);cx.save();cx.translate(hx,hy);cx.rotate(wa);cx.scale(1,bs);cx.drawImage(ws.c,-ws.ox,-ws.oy,ws.w,ws.h);cx.restore()};
- if(Math.sin(wa)<-.2)drawW();spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);if(Math.sin(wa)>=-.2)drawW();
+ const has=!(P.resp>0);if(has&&Math.sin(wa)<-.2)drawW();spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);if(has&&Math.sin(wa)>=-.2)drawW();
+ const hx2=x+(flip?-7:7),hy2=y-2;if(P.throwT>0){const p=1-P.throwT/.16;cx.strokeStyle=`rgba(230,235,255,${.6*(1-p)})`;cx.lineWidth=4;cx.beginPath();cx.arc(x,y-6,16,f-2.4+p*1.6,f-.4+p*.4);cx.stroke();cx.strokeStyle='#c89a74';cx.lineWidth=3.2;cx.lineCap='round';cx.beginPath();cx.moveTo(x+(flip?-6:6),y-4);cx.lineTo(x+(flip?-6:6)+Math.cos(f-1+p)*9,y-4+Math.sin(f-1+p)*9);cx.stroke()}
+ if(P.popT>0){const k=P.popT/.22;cx.save();cx.globalCompositeOperation='lighter';cx.fillStyle=`rgba(150,200,255,${k*.7})`;cx.beginPath();cx.arc(hx2,hy2-12,6+(1-k)*14,0,7);cx.fill();cx.strokeStyle=`rgba(255,240,180,${k})`;cx.lineWidth=1.5;cx.beginPath();cx.arc(hx2,hy2-12,4+(1-k)*20,0,7);cx.stroke();cx.restore()}
  if(P.blocking)spr(SPR.shield,x+Math.cos(f)*12,y-2+Math.sin(f)*12,flip);
  cx.restore()}
 function drawTitleBg(t){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1020');g.addColorStop(.7,'#1a0a0c');g.addColorStop(1,'#050506');cx.fillStyle=g;cx.fillRect(0,0,W,H);
