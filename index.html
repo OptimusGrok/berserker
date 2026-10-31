@@ -76,12 +76,12 @@ function bakeAxe(){if(!AC||AXB)return;const sr=AC.sampleRate,mk=(d,fn)=>{const n
  const ev=(t,a,r)=>t<a?t/a:Math.exp(-(t-a)/r);
  // launch: whoosh + spin. o: whoosh f0,f1 ; spin start,len,rate0,rate1,f0,f1,q ; hum
  const launch=(a,n,sr,o)=>{const w=BP(),sp=BP();let ph=0;for(let i=0;i<n;i++){const t=i/sr;let v=0;
-   if(t<.2)v+=w(rn(),o.w0*Math.pow(o.w1/o.w0,t/.2),2)*ev(t,o.wa,o.wr)*o.wg;
+   if(t<.2)v+=w(rn(),o.w0*Math.pow(o.w1/o.w0,t/.2),.7)*ev(t,o.wa,o.wr)*o.wg;
    const u=(t-o.s)/o.l;if(u>=0&&u<=1){const r=o.r0+(o.r1-o.r0)*u;ph+=2*Math.PI*r/sr;const am=.05+.95*Math.pow(Math.abs(Math.sin(ph/2)),3),sw=Math.pow(Math.sin(Math.PI*u),.7);
-    v+=sp(rn(),o.f0*Math.pow(o.f1/o.f0,u),3)*am*sw*o.sg;
+    v+=sp(rn(),o.f0*Math.pow(o.f1/o.f0,u),1.2)*am*sw*o.sg;
 }
    a[i]=v}};
- const aL=mk(.64,(a,n,sr)=>launch(a,n,sr,{w0:500,w1:2200,wa:.03,wr:.07,wg:.9,s:.08,l:.55,r0:11,r1:9,f0:900,f1:650,sg:.7}));
+ const aL=mk(.64,(a,n,sr)=>launch(a,n,sr,{w0:1300,w1:450,wa:.03,wr:.07,wg:.9,s:.08,l:.55,r0:11,r1:9,f0:600,f1:420,sg:.7}));
  const aI=mk(.3,(a,n,sr)=>{const l=LP(.12),b=BP();let ph=0;for(let i=0;i<n;i++){const t=i/sr,f=180*Math.pow(55/180,t/.3);ph+=2*Math.PI*f/sr;
    a[i]=Math.sin(ph)*ev(t,.002,.07)+l(rn())*2.2*ev(t,.001,.025)*.8+b(rn(),420,6)*ev(t,.001,.06)*.6}});
  AXB=[aL,aI]}
