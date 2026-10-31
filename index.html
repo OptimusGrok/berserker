@@ -130,7 +130,7 @@ const BOSSES={jarl:{n:'The Undead Jarl',sub:'He rose from the burial mound, stil
  queen:{n:'The Brood Queen',sub:'The caves skitter with her children.',hp:1300,r:28,spd:45,col:'#5a2848'},
  fenrir:{n:'Fenrir the Grave Hound',sub:'The chain is broken. The wolf runs free.',hp:1400,r:24,spd:150,col:'#3c4250'},
  beast:{n:'The Beast',sub:'The last horror between you and Valhalla.',hp:2200,r:34,spd:55,col:'#3a1210'}};
-const WQ=[10,12,14,17,19,22,24,27,30],WR=[1.1,1,.95,.9,.85,.8,.75,.7,.65];
+const WQ=[14,16,19,22,25,28,31,35,38],WR=[1.1,1,.95,.9,.85,.8,.75,.7,.65];
 function mkSeq(mix,mini,boss){const q=[];for(let i=0;i<9;i++)q.push(i==4&&mini?{b:mini}:{w:mix[i],q:WQ[i],r:WR[i]});q.push({b:boss});return q}
 const STAGES=[{n:'The Village',sub:'Stage I',ground:['#1c1a16','#24201a'],obs:['house','tree','rock'],
   seq:mkSeq([['skeleton'],['skeleton','zombie'],['skeleton','skeleton','zombie'],['skeleton','zombie','zombie'],['skeleton','zombie','huscarl'],['skeleton','zombie','huscarl'],['skeleton','zombie','zombie','huscarl'],['skeleton','zombie','huscarl','huscarl'],['skeleton','zombie','huscarl','huscarl']],null,'jarl')},
@@ -379,8 +379,8 @@ function startStage(i){if(typeof P=='object'&&P)P.dashCd=0;pax=[];dead=[];tgt=nu
 let banT;function banner(a,b){const e=$('banner');e.innerHTML=a+(b?'<small>'+b+'</small>':'');e.style.opacity=1;clearTimeout(banT);banT=setTimeout(()=>e.style.opacity=0,2600)}
 // ---------- spawning ----------
 function spawn(type,x,y){const t=ET[type],sc=1+G.stage*.35;if(x==null){const a=R()*7,d=Math.hypot(W,H)/SC/2+15;x=cl(P.x+Math.cos(a)*d,20,WS-20);y=cl(P.y+Math.sin(a)*d,20,WS-20);if(G.stage==0){const dx=x-650,dy=y-650,q=Math.hypot(dx,dy);if(q>470){x=650+dx/q*470;y=650+dy/q*470}}}
- ens.push({type,x,y,r:t.r,hp:t.hp*sc,max:t.hp*sc,spd:t.spd*(.9+R()*.2),dmg:t.dmg*(1+G.stage*.25),col:t.col,vx:0,vy:0,t:R()*5,cd:1+R(),st:0,flash:0,face:0,ph:R()*7})}
-function spawnBoss(k){const b=BOSSES[k],sc=1;const e={type:'boss',bk:k,n:b.n,x:P.x,y:Math.max(60,P.y-220),r:b.r,hp:b.hp,max:b.hp,spd:b.spd,dmg:18+G.stage*6,col:b.col,vx:0,vy:0,t:0,cd:2,st:'idle',flash:0,face:0,ph:0,atk:0};
+ ens.push({type,x,y,r:t.r,hp:t.hp*sc*1.15,max:t.hp*sc*1.15,spd:t.spd*1.08*(.9+R()*.2),dmg:t.dmg*1.15*(1+G.stage*.25),col:t.col,vx:0,vy:0,t:R()*5,cd:1+R(),st:0,flash:0,face:0,ph:R()*7})}
+function spawnBoss(k){const b=BOSSES[k],sc=1;const e={type:'boss',bk:k,n:b.n,x:P.x,y:Math.max(60,P.y-220),r:b.r,hp:b.hp*1.15,max:b.hp*1.15,spd:b.spd,dmg:18+G.stage*6,col:b.col,vx:0,vy:0,t:0,cd:2,st:'idle',flash:0,face:0,ph:0,atk:0};
  if(e.y<60)e.y=P.y+220;ens.push(e);G.boss=e;G.state='intro';G.introT=2.6;banner(b.n,b.sub);S.roar();shake=12}
 // ---------- input ----------
 const K={};let tgt=null,walkId=null,marks=[],stuckT=0;const BT={A:0,H:0,B:0,D:0,T:0};
@@ -490,7 +490,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
  if(!seg){if(ens.every(e=>e.hp<=0)){stageClear()}}
  else if(seg.b){if(!G.boss&&G.state=='play'){spawnBoss(seg.b);return}}
  else{G.segT+=dt;if(G.brk>0){G.brk-=dt;if(G.brk<=0){G.seqI++;G.segT=0;G.wK=0;G.wS=0;const nx=st.seq[G.seqI];banner('Wave '+(G.seqI+1),nx&&nx.b?'':'')}}
-  else{G.spawnT-=dt;const alive=ens.filter(e=>e.hp>0).length;if(G.spawnT<=0&&alive<32&&G.wS<seg.q){G.spawnT=.85*seg.r*(1-Math.min(.3,G.segT/30*.3));const n=G.segT<1.5?3:1;for(let i=0;i<n&&G.wS<seg.q;i++){spawn(seg.w[Math.floor(R()*seg.w.length)]);G.wS++}}
+  else{G.spawnT-=dt;const alive=ens.filter(e=>e.hp>0).length;if(G.spawnT<=0&&alive<40&&G.wS<seg.q){G.spawnT=.5*seg.r*(1-Math.min(.3,G.segT/30*.3));const n=G.wS==0?Math.min(40-alive,6+Math.round(G.seqI*.75)):G.segT<2?2:1;for(let i=0;i<n&&G.wS<seg.q;i++){spawn(seg.w[Math.floor(R()*seg.w.length)]);G.wS++}}
   if(G.wK>=seg.q||(G.wS>=seg.q&&alive==0)){G.wK=Math.max(G.wK,seg.q);G.brk=1.5}}if(G.stage==0&&G.seqI>=2&&!G.rainOn)G.rainOn=1}
  // player
  let mx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),my=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0);
