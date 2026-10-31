@@ -21,6 +21,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 .grid button small{display:block;opacity:.7;font-size:11px}
 #ui{position:fixed;inset:0;pointer-events:none;z-index:5;display:none}
 #ui.on{display:block}
+#joy{position:absolute;pointer-events:auto;touch-action:none;left:calc(12px + env(safe-area-inset-left));bottom:calc(14px + env(safe-area-inset-bottom));width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(20,24,34,.45) 0,rgba(20,24,34,.25) 60%,rgba(0,0,0,0) 71%)}#joy.off{display:none}#joy canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.88;filter:drop-shadow(0 2px 3px #000)}#jk{position:absolute;left:50%;top:50%;width:44%;height:44%;margin:-22% 0 0 -22%;border-radius:50%;background:radial-gradient(circle at 38% 32%,#b8b2a4,#5c5850 45%,#26241f 80%);border:2px solid #1a1812;box-shadow:0 3px 8px #000c,inset 0 0 0 4px rgba(201,169,110,.35),inset 0 0 0 9px rgba(20,18,12,.5),inset 0 0 0 11px rgba(201,169,110,.45);color:#e8c878;font:bold 20px Georgia,serif;display:flex;align-items:center;justify-content:center;text-shadow:0 0 6px #b3121b;pointer-events:none}
 .btn{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid rgba(200,180,140,.5);background:rgba(20,24,34,.55);color:#e8dcc8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;touch-action:none}
 .btn.dn{background:rgba(179,18,27,.55)}
 #pbtn{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;width:40px;height:40px;pointer-events:auto;border-radius:8px;font-size:18px}
@@ -35,7 +36,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <div id="ui">
  <div id="pbtn" class="btn">II</div><div id="zin" class="btn zb" style="right:56px">+</div><div id="zout" class="btn zb" style="right:102px">&minus;</div>
  <div id="bA" class="btn">ATTACK</div>
- <div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div><div id="bRg" class="btn">BERSERKER</div>
+ <div id="joy"><canvas id="jc" width="280" height="280"></canvas><div id="jk"></div></div><div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div><div id="bRg" class="btn">BERSERKER</div>
 </div>
 <div id="gate"><div class="gin"><span class="gr">&#x16B1;</span> TAP TO ENTER <span class="gr">&#x16B1;</span></div></div><div id="title" class="ov on"><video id="tv" playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F50A;</button>
  <div id="raven" aria-hidden="true"></div>
@@ -159,18 +160,25 @@ const K={};let tgt=null,walkId=null,marks=[],stuckT=0;const BT={A:0,H:0,B:0,D:0,
 addEventListener('keydown',e=>{K[e.code]=1;{const m={KeyB:'R',KeyL:'T'}[e.code];if(m&&!e.repeat)BTL[m]=1}if(e.code=='Escape')togglePause();if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();initAudio()});
 addEventListener('keyup',e=>K[e.code]=0);
 function setTgt(e,mark){if(!P)return;tgt={x:cl(cam.x+(e.clientX-W/2)/SC,P.r,WS-P.r),y:cl(cam.y+(e.clientY-H/2)/SC,P.r,WS-P.r)};stuckT=0;if(mark||!marks.length||marks[marks.length-1].l<.75)marks.push({x:tgt.x,y:tgt.y,l:1});if(marks.length>8)marks.shift()}
+const J={x:0,y:0,id:null};
+(function(){const jo=$('joy'),jk=$('jk'),c=$('jc').getContext('2d'),im=new Image();im.onload=()=>{const sc=270/im.height,w=im.width*sc,hx=68.5*sc;for(const r of[Math.PI/2,0]){c.save();c.translate(140,140);c.rotate(r);c.drawImage(im,-hx,-135,w,270);c.restore()}};im.src='axe.webp';
+ const set=e=>{const b=jo.getBoundingClientRect(),R=b.width/2,dx=e.clientX-b.left-R,dy=e.clientY-b.top-R,d=Math.hypot(dx,dy),mr=R*.62,k=d>mr?mr/d:1;jk.style.transform=`translate(${dx*k}px,${dy*k}px)`;let m=Math.min(d/mr,1);const dz=.18;m=m<dz?0:(m-dz)/(1-dz);J.x=d?dx/d*m:0;J.y=d?dy/d*m:0};
+ jo.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();if(J.id!=null)return;J.id=e.pointerId;jo.setPointerCapture&&jo.setPointerCapture(e.pointerId);set(e)});
+ jo.addEventListener('pointermove',e=>{if(e.pointerId===J.id)set(e)});
+ const end=e=>{if(e.pointerId!==J.id)return;J.id=null;J.x=J.y=0;jk.style.transform=''};['pointerup','pointercancel','lostpointercapture'].forEach(t=>jo.addEventListener(t,end));
+ function vis(){const on=(G.state=='play'||G.state=='intro');jo.classList.toggle('off',!on);if(!on&&J.id!=null){J.id=null;J.x=J.y=0;jk.style.transform=''}requestAnimationFrame(vis)}vis()})();
 const ptrs=new Map();let pinch=null;const pd=()=>{const [a,b]=[...ptrs.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1};
 cv.addEventListener('pointerdown',e=>{initAudio();if(e.target!==cv)return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(ptrs.size>=2){if(walkId!=null){walkId=null;tgt=null}if(ptrs.size==2)pinch={d:pd(),z:Z};return}
- if(G.state=='play'&&G.warp>0){skipWarp();return}if((G.state!='play'&&G.state!='intro')||walkId!=null||pinch)return;walkId=e.pointerId;setTgt(e,1)});
-cv.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){setZoom(pinch.z*pd()/pinch.d);return}if(e.pointerId===walkId)setTgt(e)});
+ if(G.state=='play'&&G.warp>0){skipWarp();return}});
+cv.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){setZoom(pinch.z*pd()/pinch.d);return}});
 ['pointerup','pointercancel'].forEach(t=>addEventListener(t,e=>{ptrs.delete(e.pointerId);if(ptrs.size<2&&pinch&&!ptrs.size)pinch=null;if(e.pointerId===walkId)walkId=null}));
 function bindBtn(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();BT[k]=1;BTL[k]=1;el.classList.add('dn');el.setPointerCapture&&el.setPointerCapture(e.pointerId)});
  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,()=>{BT[k]=0;el.classList.remove('dn')}))}
 bindBtn('bA','A');bindBtn('bD','D');bindBtn('thor','T');bindBtn('bRg','R');
 $('zin').addEventListener('pointerdown',e=>{e.stopPropagation();setZoom(Z*1.15)});$('zout').addEventListener('pointerdown',e=>{e.stopPropagation();setZoom(Z/1.15)});
 $('pbtn').addEventListener('pointerdown',e=>{e.stopPropagation();togglePause()});
-function layoutBtns(){const s=Math.min(W,H),u=cl(s*.17,52,82),m=14,bx=W-m-u,by=H-m-u-(W>H?0:20);
+function layoutBtns(){{const js=Math.round(cl(Math.min(W,H)*.36,110,150));Object.assign($('joy').style,{width:js+'px',height:js+'px'})}const s=Math.min(W,H),u=cl(s*.17,52,82),m=14,bx=W-m-u,by=H-m-u-(W>H?0:20);
  const pos={bA:[bx-u*.2,by-u*.2,u*1.25]};
  for(const k in pos){const e=$(k),[x,y,z]=pos[k];Object.assign(e.style,{left:x+'px',top:y+'px',width:z+'px',height:z+'px'})}}
 function showUI(on){$('ui').classList.toggle('on',on)}
@@ -258,7 +266,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
   if(G.segT>=seg.t){G.seqI++;G.segT=0;const nx=st.seq[G.seqI];if(nx&&nx.w)banner('Wave '+(G.seqI+1),'')}}
  // player
  let mx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),my=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0);
- if(mx||my)tgt=null;else if(tgt){const d=dist(P,tgt);if(d<5&&walkId==null)tgt=null;else if(d>=5){mx=(tgt.x-P.x)/d;my=(tgt.y-P.y)/d;if(d<20){mx*=d/20;my*=d/20}
+ if(!mx&&!my&&(J.x||J.y)){mx=J.x;my=J.y}if(mx||my)tgt=null;else if(tgt){const d=dist(P,tgt);if(d<5&&walkId==null)tgt=null;else if(d>=5){mx=(tgt.x-P.x)/d;my=(tgt.y-P.y)/d;if(d<20){mx*=d/20;my*=d/20}
   for(const b of obs){const dx=P.x-b.x,dy=P.y-b.y,dd=Math.hypot(dx,dy),m=P.r+b.r+3;if(dd<m+4){const nx=dx/dd,ny=dy/dd,dot=mx*nx+my*ny;if(dot<0){mx-=dot*nx;my-=dot*ny;const l=Math.hypot(mx,my);if(l>.05){mx/=l;my/=l}}}}}}
  const m=Math.hypot(mx,my);if(m>1){mx/=m;my/=m}
  P.blocking=false;
