@@ -37,7 +37,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
  <div id="bA" class="btn">ATTACK</div><div id="bH" class="btn">HEAVY</div>
  <div id="bB" class="btn">BLOCK</div><div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div>
 </div>
-<div id="title" class="ov on"><video id="tv" muted playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F507;</button>
+<div id="title" class="ov on"><video id="tv" playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F50A;</button>
  <div id="raven" aria-hidden="true"></div>
  <h1>BERSERKER</h1>
  <p id="best" style="display:none"></p>
@@ -61,8 +61,8 @@ addEventListener('resize',resize);
 document.addEventListener('touchmove',e=>{if(!e.target.closest('.ov'))e.preventDefault()},{passive:false});
 document.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
 // ---------- audio ----------
-let AC,master,musG,sfxG,musOn=true,sfxOn=true;
-function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=.35;musG.connect(master);sfxG=AC.createGain();sfxG.connect(master);}catch(e){}}
+let AC,master,musG,sfxG,musOn=localStorage.getItem('berserker_mus')!=='0',sfxOn=true;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=musOn?.35:0;musG.connect(master);sfxG=AC.createGain();sfxG.connect(master);}catch(e){}}
 function tone(f,d,ty='square',v=.2,f2,dest){if(!AC||(!dest&&!sfxOn))return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest||sfxG);o.start(t);o.stop(t+d+.02)}
 let NB;function noise(d,v=.3,fr=1200,dest,when){if(!AC||(!dest&&!sfxOn))return;if(!NB){NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const a=NB.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}const t=when||AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;f.type='lowpass';f.frequency.value=fr;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||sfxG);s.start(t);s.stop(t+d+.02)}
 const S={swing(){noise(.12,.25,2500)},hit(){noise(.1,.4,900);tone(140,.1,'square',.15,60)},heavy(){noise(.25,.5,600);tone(90,.25,'sawtooth',.25,40)},hurt(){tone(220,.2,'sawtooth',.25,80)},block(){tone(900,.08,'square',.12,500);noise(.05,.2,4000)},dash(){noise(.15,.2,3000)},coin(){tone(1200,.08,'triangle',.12,1800)},lvl(){[440,554,660,880].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.18),i*80))},thor(){noise(.8,.7,3000);tone(60,.8,'sawtooth',.35,30)},roar(){tone(110,.9,'sawtooth',.3,50);noise(.9,.3,500)},die(){tone(70,.3,'square',.2,40)}};
@@ -519,11 +519,21 @@ function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;
 function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pause')}else if(G.state=='pause'){G.state='play';ov(null);showUI(true)}}
 $('play').onclick=()=>{initAudio();stopTV();ov(null);newRun()};$('again').onclick=()=>{ov(null);newRun()};
 const toTitle=()=>{G.state='title';P=null;showUI(false);music(false);showBest();ov('title');startTV()};$('dtitle').onclick=$('wtitle').onclick=$('quit').onclick=toTitle;
-$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF')};
+$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF')};
 $('sfx').onclick=()=>{sfxOn=!sfxOn;$('sfx').textContent='Sound FX: '+(sfxOn?'ON':'OFF')};
 const tv=$('tv');let tvOk=true;$('title').classList.add('vid');
 tv.addEventListener('error',()=>{tvOk=false;$('title').classList.remove('vid')});
-$('tsnd').onclick=e=>{e.stopPropagation();tv.muted=!tv.muted;$('tsnd').innerHTML=tv.muted?'&#x1F507;':'&#x1F50A;';if(!tv.muted)tv.play().catch(()=>{})};
+$('tsnd').onclick=e=>{e.stopPropagation();tv.muted=!tv.muted;localStorage.setItem('berserker_tvmute',tv.muted?'1':'0');$('tsnd').innerHTML=tv.muted?'&#x1F507;':'&#x1F50A;';if(!tv.muted)tv.play().catch(()=>{})};
+$('mute').textContent='Music: '+(musOn?'ON':'OFF');
+const tvWantSnd=localStorage.getItem('berserker_tvmute')!=='1';const tsI=()=>{$('tsnd').innerHTML=tv.muted?'&#x1F507;':'&#x1F50A;'};
+let tvPend=false;
+function tvStart(){tv.muted=!tvWantSnd;tsI();const pr=tv.play();if(pr&&pr.catch)pr.catch(()=>{if(!tvWantSnd)return;tv.muted=true;tv.play().catch(()=>{});tvPend=true;$('tsnd').innerHTML='&#x1F50A;'})}
+let swallow=false;
+function firstGesture(e){if(!tvPend)return;tvPend=false;if(tv.getAttribute('src')){tv.muted=false;tv.play().catch(()=>{});tsI()}
+ const t=e.target;if(!(t&&t.id==='play')){swallow=true;e.stopPropagation();setTimeout(()=>swallow=false,700)}}
+['pointerdown','touchstart','keydown'].forEach(n=>window.addEventListener(n,firstGesture,{capture:true}));
+window.addEventListener('click',e=>{if(swallow){swallow=false;e.stopPropagation();e.preventDefault()}},{capture:true});
+tvStart();
 function stopTV(){tv.pause();tv.muted=true;$('tsnd').innerHTML='&#x1F507;';tv.removeAttribute('src');tv.load()}
 function startTV(){if(!tvOk)return;tv.src='title.mp4';tv.play().catch(()=>{})}
 let rav=0,ravT=0;$('raven').onclick=()=>{const n=performance.now();if(n-ravT>1500)rav=0;ravT=n;rav++;tone(600+rav*100,.08,'triangle',.1);if(rav>=5){rav=0;ov('cheat')}};
