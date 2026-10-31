@@ -5,6 +5,7 @@
 *{box-sizing:border-box;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#07080c;color:#e8dcc8;font-family:Georgia,serif;touch-action:none;overscroll-behavior:none}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.vol{width:min(92vw,420px);margin:5px 0}.vl{font-size:14px;letter-spacing:1px;color:#e8d7a8;margin-bottom:3px}.vl b{color:#ffb040}.vr{display:flex;align-items:center;gap:6px}.vr .vb{margin:0;min-width:46px;min-height:44px;padding:0;font-size:24px}.segs{flex:1;display:flex;gap:3px}.segs .sg{flex:1;margin:0;padding:0;min-width:0;height:40px;font-size:11px;border-radius:3px;background:#2a2218;color:#8a7a5a;border:1px solid #5a4a30;box-shadow:none}.segs .sg.on{background:linear-gradient(#ffb040,#b8501a);color:#1a0e04;border-color:#ffcf70}#pause.ov{justify-content:safe center}
 .ov{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(5,6,10,.82);z-index:10;padding:16px;overflow:auto}
 .ov.on{display:flex}
 h1{font-size:clamp(40px,12vw,84px);margin:.1em 0;letter-spacing:.12em;color:#b3121b;text-shadow:0 0 18px #500,3px 3px 0 #000}
@@ -47,7 +48,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <div id="cheat" class="ov"><h2>Raven's Secrets</h2>
  <button id="cInv">Invincibility: OFF</button><button id="cFF">Fast Forward: OFF</button><button id="cBoss">Skip to Boss: OFF</button>
  <button id="cBack">Back</button></div>
-<div id="pause" class="ov"><h2>Paused</h2><p id="credits" style="position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;margin:0 12px;font-size:11px;opacity:.6">Credits &middot; Title music: 'Viking March' by nightm4re, CC0 &middot; Music: 'Varyag War Drum' by Tausdei (Tausdei Music), CC-BY 3.0, via OpenGameArt.org</p><button id="resume">Resume</button><button id="mute">Music: ON</button><button id="sfx">Sound FX: ON</button><button class="red" id="quit">Quit to Title</button></div>
+<div id="pause" class="ov"><h2>Paused</h2><p id="credits" style="order:9;margin:10px 12px 0;font-size:11px;opacity:.6">Credits &middot; Title music: 'Viking March' by nightm4re, CC0 &middot; Music: 'Varyag War Drum' by Tausdei (Tausdei Music), CC-BY 3.0, via OpenGameArt.org</p><button id="resume">Resume</button><div class="vol"><div class="vl">Music <b id="musN"></b></div><div class="vr"><button class="vb" data-k="mus" data-d="-1">&minus;</button><div class="segs" id="musS"></div><button class="vb" data-k="mus" data-d="1">+</button></div></div><div class="vol"><div class="vl">Sound Effects <b id="sfxN"></b></div><div class="vr"><button class="vb" data-k="sfx" data-d="-1">&minus;</button><div class="segs" id="sfxS"></div><button class="vb" data-k="sfx" data-d="1">+</button></div></div><button class="red" id="quit">Quit to Title</button></div>
 <div id="shop" class="ov"><h2>The Market</h2><p id="gold"></p><p style="font-size:13px">Blessings</p><div class="grid" id="bless"></div><p style="font-size:13px">Weapons</p><div class="grid" id="weap"></div><button class="red" id="next">Onward</button></div>
 <div id="dead" class="ov"><h1 style="font-size:clamp(34px,10vw,64px)">YOU HAVE FALLEN</h1><p id="dstat"></p><button class="red" id="again">Rise Again</button><button id="dtitle">Title</button></div>
 <div id="win" class="ov"><h1 style="color:#c9a96e;font-size:clamp(34px,11vw,72px)">VALHALLA</h1><p>The Beast is slain. The halls of Odin open for you.</p><p id="wstat"></p><button class="red" id="wtitle">Title</button></div>
@@ -63,7 +64,8 @@ document.addEventListener('touchmove',e=>{if(!e.target.closest('.ov'))e.preventD
 document.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
 // ---------- audio ----------
 let AC,master,musG,sfxG,musOn=(localStorage.getItem('berserker_mus2')?localStorage.getItem('berserker_mus')!=='0':(localStorage.setItem('berserker_mus2','1'),localStorage.removeItem('berserker_mus'),true)),sfxOn=true;
-function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=musOn?.35:0;musG.connect(master);sfxG=AC.createGain();sfxG.gain.value=.5;sfxG.connect(master);loadAXA();loadBIO()}catch(e){}}
+const lvL=k=>{const v=localStorage.getItem(k);return v===null?5:Math.max(0,Math.min(10,+v|0))};let musL=lvL('berserker_musvol'),sfxL=lvL('berserker_sfxvol');musOn=musL>0;sfxOn=sfxL>0;const MK=()=>musL/5,SK=()=>sfxL/5;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=.35*MK();musG.connect(master);sfxG=AC.createGain();sfxG.gain.value=.5*SK();sfxG.connect(master);loadAXA();loadBIO()}catch(e){}}
 function tone(f,d,ty='square',v=.2,f2,dest){if(!AC||(!dest&&!sfxOn))return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest||sfxG);o.start(t);o.stop(t+d+.02)}
 let NB;function noise(d,v=.3,fr=1200,dest,when){if(!AC||(!dest&&!sfxOn))return;if(!NB){NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const a=NB.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}const t=when||AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;f.type='lowpass';f.frequency.value=fr;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||sfxG);s.start(t);s.stop(t+d+.02)}
 // ---------- axe-throw SFX (A Classic / C Rune), pre-rendered once ----------
@@ -91,8 +93,8 @@ const S={roar2(){noise(.7,.5,500);tone(110,.6,'sawtooth',.25,70);tone(165,.5,'sa
 let musT=0,step=0,musTimer=null;
 // ---------- streamed stage music (Village) ----------
 let BIO=null,BIOt=0;function loadBIO(){if(BIO||BIOt)return;BIOt=1;try{fetch('bring_it_on_1.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(b=>new Promise((ok,no)=>{const q=AC.decodeAudioData(b,ok,no);if(q&&q.then)q.then(ok,no)})).then(d=>{BIO=d}).catch(()=>{})}catch(e){}}
-function playBIO(){if(!AC||!sfxOn||!BIO)return false;try{const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=1.9;s.buffer=BIO;s.connect(g);g.connect(master);s.start();window._bioPlays=(window._bioPlays||0)+1;if(VM&&musOn&&!VM.paused){vmFade(VMV*.35,.15);setTimeout(()=>{if(musOn&&VM)vmFade(VMV,.6)},BIO.duration*1000+150)}if(musG&&musOn){const t=AC.currentTime;musG.gain.cancelScheduledValues(t);musG.gain.setValueAtTime(musG.gain.value,t);musG.gain.linearRampToValueAtTime(.12,t+.15);musG.gain.setValueAtTime(.12,t+BIO.duration);musG.gain.linearRampToValueAtTime(.35,t+BIO.duration+.6)}return true}catch(e){return false}}
-let VM=null,VMfail=0,VMfi=null;const VMV=.55;
+function playBIO(){if(!AC||!sfxOn||!BIO)return false;try{const s=AC.createBufferSource(),g=AC.createGain();g.gain.value=1.9*SK();s.buffer=BIO;s.connect(g);g.connect(master);s.start();window._bioPlays=(window._bioPlays||0)+1;if(VM&&musOn&&!VM.paused){vmFade(VMV*.35,.15);setTimeout(()=>{if(musOn&&VM)vmFade(VMV,.6)},BIO.duration*1000+150)}if(musG&&musOn){const t=AC.currentTime;musG.gain.cancelScheduledValues(t);musG.gain.setValueAtTime(musG.gain.value,t);musG.gain.linearRampToValueAtTime(.12*MK(),t+.15);musG.gain.setValueAtTime(.12*MK(),t+BIO.duration);musG.gain.linearRampToValueAtTime(.35*MK(),t+BIO.duration+.6)}return true}catch(e){return false}}
+let VM=null,VMfail=0,VMfi=null;let VMV=Math.min(1,.55*MK());
 function vmFade(to,d){if(!VM)return;clearInterval(VMfi);const a=VM,f0=a.volume,t0=performance.now();VMfi=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/(d*1000));a.volume=Math.max(0,Math.min(1,f0+(to-f0)*k));if(k>=1){clearInterval(VMfi);if(to==0&&a._kill){a.pause();a.removeAttribute('src');a.load()}}},50)}
 function vmStop(){if(!VM)return;VM._kill=1;vmFade(0,.8);VM=null}
 function stageMusic(i){vmStop();if(i!==0||VMfail){music(true);return}
@@ -823,17 +825,18 @@ function loop(now){rainSnd();let dt=Math.min(.05,(now-last)/1000);last=now;
 function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pause');if(VM)VM.pause()}else if(G.state=='pause'){G.state='play';ov(null);showUI(true);if(VM&&musOn)VM.play().catch(()=>{})}}
 $('play').onclick=()=>{tmStop();initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}stopTV();ov(null);if(!introDone){introDone=1;playIntro(newRun)}else newRun()};$('again').onclick=()=>{ov(null);newRun()};
 const toTitle=()=>{G.state='title';P=null;showUI(false);music(false);showBest();ov('title');startTV()};$('dtitle').onclick=$('wtitle').onclick=$('quit').onclick=toTitle;
-$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(VM){vmFade(musOn?VMV:0,.4);if(musOn&&G.state=='play')VM.play().catch(()=>{})}if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF');if(!musOn)TM.pause()};
-$('sfx').onclick=()=>{sfxOn=!sfxOn;$('sfx').textContent='Sound FX: '+(sfxOn?'ON':'OFF')};
+$('resume').onclick=togglePause;function setVol(k,L){L=Math.max(0,Math.min(10,L));if(k=='mus'){const was=musOn;musL=L;musOn=L>0;localStorage.setItem('berserker_musvol',L);VMV=Math.min(1,.55*MK());TMV=Math.min(1,.8*MK());if(musG){const t=AC.currentTime;musG.gain.cancelScheduledValues(t);musG.gain.setValueAtTime(.35*MK(),t)}if(VM){vmFade(musOn?VMV:0,.3);if(musOn&&!was&&G.state=='play')VM.play().catch(()=>{})}clearInterval(TMfi);TM.volume=TMV;if(!musOn)TM.pause()}else{sfxL=L;sfxOn=L>0;localStorage.setItem('berserker_sfxvol',L);if(sfxG)sfxG.gain.value=.5*SK();if(sfxOn)axeSnd()}volUI()}
+function volUI(){for(const k of['mus','sfx']){const L=k=='mus'?musL:sfxL;$(k+'N').textContent=L?L:'Off';const S=$(k+'S');if(!S.children.length)for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='sg';b.textContent=i;b.onclick=()=>setVol(k,i);S.appendChild(b)}[...S.children].forEach((b,i)=>b.classList.toggle('on',i<L))}}
+document.querySelectorAll('.vb').forEach(b=>b.onclick=()=>{const k=b.dataset.k;setVol(k,(k=='mus'?musL:sfxL)+ +b.dataset.d)});volUI();
 const tv=$('tv');let tvOk=true;$('title').classList.add('vid');
 tv.addEventListener('error',()=>{tvOk=false;$('title').classList.remove('vid')});
-$('mute').textContent='Music: '+(musOn?'ON':'OFF');
+
 localStorage.removeItem('berserker_tvmute');
 // sound unlock: try unmuted autoplay; else muted + unmute on first gesture of any kind
 let sndOn=0;
-const TM=new Audio();TM.loop=true;TM.preload='auto';TM.src='title_music.m4a';TM.volume=.8;let TMfi=null;
-function tmPlay(){if(!musOn||G.state!='title'||document.hidden)return;clearInterval(TMfi);TM.volume=.8;try{const p=TM.play();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
-function tmStop(){clearInterval(TMfi);const f0=TM.volume,t0=performance.now();TMfi=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/600);TM.volume=Math.max(0,f0*(1-k));if(k>=1){clearInterval(TMfi);TM.pause();TM.volume=.8}},40)}
+const TM=new Audio();TM.loop=true;TM.preload='auto';let TMV=Math.min(1,.8*MK());TM.src='title_music.m4a';TM.volume=TMV;let TMfi=null;
+function tmPlay(){if(!musOn||G.state!='title'||document.hidden)return;clearInterval(TMfi);TM.volume=TMV;try{const p=TM.play();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
+function tmStop(){clearInterval(TMfi);const f0=TM.volume,t0=performance.now();TMfi=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/600);TM.volume=Math.max(0,f0*(1-k));if(k>=1){clearInterval(TMfi);TM.pause();TM.volume=TMV}},40)}
 const tmOk=()=>!musOn||G.state!='title'||!TM.paused;
 function tryUnlock(){tmPlay();initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}
  if(tv.getAttribute('src')&&G.state=='title'){tv.muted=false;tv.volume=.3;const p=tv.play();if(p&&p.catch)p.catch(()=>{})}
