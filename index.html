@@ -16,7 +16,7 @@ button:active{background:#2c3e5c}
 button.red{border-color:#b3121b;background:#2a0d10}
 #intro{position:fixed;inset:0;background:#000;z-index:50}#intro video{width:100%;height:100%;object-fit:contain;display:block}#iskip{position:absolute;right:calc(16px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));min-width:0;padding:8px 16px;font-size:15px;background:rgba(10,12,18,.6);color:#eee;border:1px solid #fff4;border-radius:20px;z-index:2}#gate{position:fixed;inset:0;z-index:60;background:#000 url(title.jpg) center/cover;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .6s;-webkit-tap-highlight-color:transparent}#gate::before{content:'';position:absolute;inset:0;background:rgba(3,4,8,.72)}#gate.out{opacity:0;pointer-events:none}.gin{position:relative;color:#e8dcc8;font:bold 22px Georgia,serif;letter-spacing:6px;text-shadow:0 0 12px #b3121b;animation:gp 1.6s ease-in-out infinite}.gr{color:#c9a96e;font-size:26px;letter-spacing:0;margin:0 10px}@keyframes gp{0%,100%{opacity:.45}50%{opacity:1}}#title{background:#05060a}#title>*{position:relative;z-index:2}#title>#tv,#title>#tshade{position:absolute;inset:0;width:100%;height:100%;z-index:0}#tv{object-fit:cover;display:none}#title.vid #tv{display:block}#tshade{background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85));display:none}#title.vid #tshade{display:block}#title.vid h1{visibility:hidden}#title.vid{justify-content:flex-end;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 #tsnd{position:absolute!important;top:calc(10px + env(safe-area-inset-top));right:10px;min-width:0;width:44px;height:44px;padding:0;font-size:20px;display:none;background:rgba(10,12,18,.6)}#title.vid #tsnd{display:block}
-#play{transition:opacity .25s,transform .25s cubic-bezier(.3,1.6,.5,1)}#play.hid{visibility:hidden;opacity:0;transform:scale(.6);pointer-events:none}
+#play{transition:opacity .25s,transform .25s cubic-bezier(.3,1.6,.5,1)}#play{position:relative;overflow:visible}#fzc{position:absolute;left:-14px;top:-14px;width:calc(100% + 28px);height:calc(100% + 28px);pointer-events:none}#play.hid{visibility:hidden;opacity:0;transform:scale(.6);pointer-events:none}
 #raven{position:absolute;top:15%;height:30%;left:20%;width:60%;cursor:default;-webkit-tap-highlight-color:transparent;z-index:1}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;max-width:620px;width:100%}
 .grid button{min-width:0;margin:0;font-size:14px;padding:8px}
@@ -45,7 +45,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
  <div id="raven" aria-hidden="true"></div>
  <h1>BERSERKER</h1>
  <p id="best" style="display:none"></p>
- <button class="red hid" id="play">FIGHT</button>
+ <button class="red hid" id="play"><canvas id="fzc" aria-hidden="true"></canvas><span style="position:relative">FIGHT</span></button>
 </div>
 <div id="cheat" class="ov"><h2>Raven's Secrets</h2>
  <button id="cInv">Invincibility: OFF</button><button id="cFF">Fast Forward: OFF</button><button id="cBoss">Skip to Boss: OFF</button>
@@ -919,6 +919,22 @@ function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pau
 let fRev=0,fTmr=0;function revealFight(){const b=$('play');if(!b.classList.contains('hid')||fTmr)return;fTmr=setTimeout(()=>{fRev=performance.now();b.classList.remove('hid')},3000)}
 ['pointerup','keyup'].forEach(t=>window.addEventListener(t,()=>{if($('title').classList.contains('on'))revealFight()},{capture:true,passive:true}));
 $('play').onclick=()=>{if($('play').classList.contains('hid')||performance.now()-fRev<350)return;tmStop();initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}stopTV();ov(null);if(!introDone){introDone=1;playIntro(newRun)}else newRun()};$('again').onclick=()=>{ov(null);newRun()};
+
+/* FIGHT electricity */
+(function(){const b=$('play'),c=$('fzc'),x=c.getContext('2d');let run=0,arcs=[],nf=0,ns=0,surge=0,lt=0;const M=14;
+function on(){return $('title').classList.contains('on')&&!b.classList.contains('hid')&&G.state=='title'}
+function pt(W,H,u){const p=2*(W+H);u=((u%1)+1)%1*p;if(u<W)return[u,0];u-=W;if(u<H)return[W,u];u-=H;if(u<W)return[W-u,H];return[0,H-(u-W)]}
+function mk(W,H,big){const r=Math.random();let a,z;if(r<.65){const u=Math.random(),l=.04+Math.random()*.1;a=pt(W,H,u);z=pt(W,H,u+l)}else if(r<.85){a=pt(W,H,Math.random());z=pt(W,H,Math.random())}else{a=pt(W,H,Math.random());const ang=Math.random()*6.28,d=6+Math.random()*7;z=[a[0]+Math.cos(ang)*d,a[1]+Math.sin(ang)*d]}
+const n=5+(Math.random()*5|0),pts=[];for(let i=0;i<=n;i++){const t=i/n,j=i&&i<n?(Math.random()-.5)*(big?7:5):0;pts.push([a[0]+(z[0]-a[0])*t+j,a[1]+(z[1]-a[1])*t+(i&&i<n?(Math.random()-.5)*(big?7:5):0)])}arcs.push({p:pts,l:.06+Math.random()*.1,w:big?1.8:1.1})}
+function f(t){if(!on()){run=0;x.clearRect(0,0,c.width,c.height);return}requestAnimationFrame(f);const dt=Math.min(.05,(t-(lt||t))/1000);lt=t;const dpr=Math.min(2,devicePixelRatio||1),cw=c.clientWidth,ch=c.clientHeight;if(c.width!=Math.round(cw*dpr)||c.height!=Math.round(ch*dpr)){c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr)}
+x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,cw,ch);const W=cw-2*M,H=ch-2*M;if(W<4)return;const s=t/1000;
+if(s>nf){const k=1+(Math.random()*2|0);for(let i=0;i<k;i++)mk(W,H,0);nf=s+.1+Math.random()*.3}
+if(s>ns){if(ns)surge=.35;for(let i=0;i<6;i++)mk(W,H,1);ns=s+2+Math.random()}
+surge=Math.max(0,surge-dt);const g=.35+.15*Math.sin(s*5)+surge*1.6;
+x.save();x.translate(M,M);x.shadowColor='rgba(90,170,255,'+Math.min(1,g+.2)+')';x.shadowBlur=8+surge*30;x.strokeStyle='rgba(110,180,255,'+Math.min(.9,g*.6)+')';x.lineWidth=1.2;x.strokeRect(0,0,W,H);
+x.lineCap='round';x.lineJoin='round';arcs=arcs.filter(a=>(a.l-=dt)>0);for(const a of arcs){x.beginPath();a.p.forEach((q,i)=>i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]));x.shadowBlur=6+surge*12;x.strokeStyle='rgba(120,190,255,.85)';x.lineWidth=a.w+1.4;x.stroke();x.strokeStyle='rgba(240,250,255,.95)';x.lineWidth=a.w*.6;x.stroke()}x.restore()}
+function start(){if(run||!on())return;run=1;lt=0;requestAnimationFrame(f)}
+new MutationObserver(start).observe(b,{attributes:true,attributeFilter:['class']});new MutationObserver(start).observe($('title'),{attributes:true,attributeFilter:['class']});window.FZstart=start;start()})();
 const toTitle=()=>{G.state='title';P=null;showUI(false);music(false);showBest();ov('title');startTV()};$('dtitle').onclick=$('wtitle').onclick=$('quit').onclick=toTitle;
 $('resume').onclick=togglePause;function setVol(k,L){L=Math.max(0,Math.min(10,L));if(k=='mus'){const was=musOn;musL=L;musOn=L>0;localStorage.setItem('berserker_musvol',L);VMV=Math.min(1,.55*MK());TMV=Math.min(1,.8*MK());if(musG){const t=AC.currentTime;musG.gain.cancelScheduledValues(t);musG.gain.setValueAtTime(.35*MK(),t)}if(VM){vmFade(musOn?VMV:0,.3);if(musOn&&!was&&G.state=='play')VM.play().catch(()=>{})}clearInterval(TMfi);TM.volume=TMV;if(!musOn)TM.pause()}else{sfxL=L;sfxOn=L>0;localStorage.setItem('berserker_sfxvol',L);if(sfxG)sfxG.gain.value=.5*SK();if(sfxOn)axeSnd()}volUI()}
 function volUI(){for(const k of['mus','sfx']){const L=k=='mus'?musL:sfxL;$(k+'N').textContent=L?L:'Off';const S=$(k+'S');if(!S.children.length)for(let i=1;i<=10;i++){const b=document.createElement('button');b.className='sg';b.textContent=i;b.onclick=()=>setVol(k,i);S.appendChild(b)}[...S.children].forEach((b,i)=>b.classList.toggle('on',i<L))}}
