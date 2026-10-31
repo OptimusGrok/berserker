@@ -26,7 +26,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 #pbtn{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px;width:40px;height:40px;pointer-events:auto;border-radius:8px;font-size:18px}
 .zb{position:absolute;top:calc(8px + env(safe-area-inset-top));width:40px;height:40px;border-radius:8px;font-size:22px}
 #bA{display:none!important}
-#thor{display:none;border-color:#7fb4ff;color:#bfe0ff;background:rgba(30,60,120,.6)}
+#bD,#thor{right:calc(16px + env(safe-area-inset-right));width:72px;height:72px;font-size:14px;letter-spacing:.5px}#bD{top:calc(50% - 36px)}#thor{top:calc(50% + 48px);display:none;border-color:#9fd0ff;color:#e6f4ff;background:radial-gradient(circle,rgba(70,130,230,.85),rgba(20,50,120,.8));animation:tpop .35s cubic-bezier(.3,1.6,.5,1),tglow 1.2s ease-in-out .35s infinite alternate}@keyframes tpop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}@keyframes tglow{from{box-shadow:0 0 8px 2px rgba(120,190,255,.6)}to{box-shadow:0 0 22px 8px rgba(140,200,255,.95)}}
 #banner{position:fixed;left:0;right:0;top:28%;text-align:center;z-index:6;pointer-events:none;font-size:clamp(28px,8vw,54px);color:#c9a96e;text-shadow:3px 3px 0 #000;opacity:0;transition:opacity .4s}
 #banner small{display:block;font-size:.45em;color:#e8dcc8}
 </style></head><body>
@@ -34,8 +34,8 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <div id="banner"></div>
 <div id="ui">
  <div id="pbtn" class="btn">II</div><div id="zin" class="btn zb" style="right:56px">+</div><div id="zout" class="btn zb" style="right:102px">&minus;</div>
- <div id="bA" class="btn">ATTACK</div><div id="bH" class="btn">HEAVY</div>
- <div id="bB" class="btn">BLOCK</div><div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div>
+ <div id="bA" class="btn">ATTACK</div>
+ <div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div>
 </div>
 <div id="title" class="ov on"><video id="tv" playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F50A;</button>
  <div id="raven" aria-hidden="true"></div>
@@ -80,7 +80,7 @@ function adiff(a,b){let d=b-a;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2
 // ---------- data ----------
 const WEAPONS={axe:{n:'Hand Axe',dmg:12,rng:46,arc:1.6,spd:.26,heavy:2.6,kb:120,col:'#9aa',cost:0,d:'Balanced'},
  battle:{n:'Battle Axe',dmg:16,rng:56,arc:2.4,spd:.32,heavy:3,kb:170,col:'#bcc',cost:60,d:'Wide sweeping arcs'},
- hammer:{n:'War Hammer',dmg:26,rng:50,arc:1.4,spd:.48,heavy:3.4,kb:320,col:'#887',cost:110,d:'Slow, crushing, heavy quakes'},
+ hammer:{n:'War Hammer',dmg:26,rng:50,arc:1.4,spd:.48,heavy:3.4,kb:320,col:'#887',cost:110,d:'Slow, crushing, quake every 4th swing'},
  rune:{n:'Rune Sword',dmg:11,rng:66,arc:1.1,spd:.15,heavy:2.4,kb:80,col:'#7fb4ff',cost:160,d:'Fast, long reach, life steal'}};
 const BLESS={vit:{n:'Vitality',d:'+25 max HP, full heal',c:30},swift:{n:'Swiftness',d:'+10% speed, faster dash',c:30},dmg:{n:'Damage',d:'+15% damage',c:35},pierce:{n:'Pierce',d:'Pierce shields, +8% crit',c:35},energy:{n:'Energy',d:'+30% energy gain',c:30}};
 const ET={skeleton:{hp:22,spd:62,r:11,dmg:8,gold:1,xp:2,col:'#d8d0b8'},zombie:{hp:45,spd:34,r:13,dmg:12,gold:1,xp:3,col:'#5f7a4a'},
@@ -135,27 +135,28 @@ cv.addEventListener('pointerdown',e=>{initAudio();if(e.target!==cv)return;ptrs.s
  if(G.state=='play'&&G.warp>0){skipWarp();return}if((G.state!='play'&&G.state!='intro')||walkId!=null||pinch)return;walkId=e.pointerId;setTgt(e,1)});
 cv.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){setZoom(pinch.z*pd()/pinch.d);return}if(e.pointerId===walkId)setTgt(e)});
 ['pointerup','pointercancel'].forEach(t=>addEventListener(t,e=>{ptrs.delete(e.pointerId);if(ptrs.size<2&&pinch&&!ptrs.size)pinch=null;if(e.pointerId===walkId)walkId=null}));
-function bindBtn(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();BT[k]=1;el.classList.add('dn');el.setPointerCapture&&el.setPointerCapture(e.pointerId)});
+function bindBtn(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();BT[k]=1;BTL[k]=1;el.classList.add('dn');el.setPointerCapture&&el.setPointerCapture(e.pointerId)});
  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,()=>{BT[k]=0;el.classList.remove('dn')}))}
-bindBtn('bA','A');bindBtn('bH','H');bindBtn('bB','B');bindBtn('bD','D');bindBtn('thor','T');
+bindBtn('bA','A');bindBtn('bD','D');bindBtn('thor','T');
 $('zin').addEventListener('pointerdown',e=>{e.stopPropagation();setZoom(Z*1.15)});$('zout').addEventListener('pointerdown',e=>{e.stopPropagation();setZoom(Z/1.15)});
 $('pbtn').addEventListener('pointerdown',e=>{e.stopPropagation();togglePause()});
 function layoutBtns(){const s=Math.min(W,H),u=cl(s*.17,52,82),m=14,bx=W-m-u,by=H-m-u-(W>H?0:20);
- const pos={bA:[bx-u*.2,by-u*.2,u*1.25],bH:[bx-u*1.35,by+u*.05,u*.95],bB:[bx-u*1.2,by-u*1.15,u*.9],bD:[bx+u*.05,by-u*1.35,u*.9],thor:[bx-u*2.35,by-u*.6,u*.9]};
+ const pos={bA:[bx-u*.2,by-u*.2,u*1.25]};
  for(const k in pos){const e=$(k),[x,y,z]=pos[k];Object.assign(e.style,{left:x+'px',top:y+'px',width:z+'px',height:z+'px'})}}
 function showUI(on){$('ui').classList.toggle('on',on)}
 function ov(id){['title','cheat','pause','shop','dead','win'].forEach(o=>$(o).classList.toggle('on',o==id))}
-let pressed={};function edge(k,v){const r=v&&!pressed[k];pressed[k]=v;return r}
+let pressed={};const BTL={};function edge(k,v){v=!!(v||BTL[k]);BTL[k]=0;const r=v&&!pressed[k];pressed[k]=v;return r}
 // ---------- combat ----------
 function pdmg(){return WEAPONS[P.weapon].dmg*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)}
 function attack(heavy){const w=WEAPONS[P.weapon];if(P.atkCd>0||P.dashT>0||P.resp>0)return;
  if(heavy){P.heavyT=w.spd*2.2;P.atkCd=w.spd*2.6;P.atkT=P.heavyT;P.isHeavy=true;P.hitDone=false;S.swing()}
+ else if(P.weapon=='hammer'&&(P.swN=(P.swN||0)+1)%4==0){P.heavyT=w.spd*2.2;P.atkCd=w.spd*2.6;P.atkT=P.heavyT;P.isHeavy=true;P.hitDone=false;S.swing()}
  else{P.combo=P.comboT>0?(P.combo+1)%3:0;P.comboT=.6;P.atkT=w.spd;P.atkCd=w.spd*(P.combo==2?1.5:1);P.isHeavy=false;P.hitDone=false;S.swing()}}
 function resolveSwing(){const w=WEAPONS[P.weapon],h=P.isHeavy,rng=w.rng*(h?1.25:1)*(P.combo==2&&!h?1.15:1),arc=h?(P.weapon=='hammer'?7:w.arc*1.4):w.arc;
  let mult=h?w.heavy:(P.combo==2?1.6:1),any=false;
  for(const e of ens){if(e.hp<=0)continue;const d=dist(P,e);if(d>rng+e.r)continue;if(Math.abs(adiff(P.face,ang(P,e)))>arc/2&&d>e.r+P.r)continue;
   let dm=pdmg()*mult*(.9+R()*.2),crit=R()<.06+P.b.pierce*.08;if(crit)dm*=2;
-  if(e.type=='huscarl'&&!h&&!P.b.pierce&&Math.abs(adiff(e.face,ang(e,P)))<1){dm*=.25;S.block()}
+  if(e.type=='huscarl'&&!h&&!P.b.pierce&&Math.abs(adiff(e.face,ang(e,P)))<1){dm*=.4;S.block()}
   hurtE(e,dm,P.face,w.kb*(h?2:1)*(e.type=='boss'?.15:1),crit);any=true;
   if(P.weapon=='rune')P.hp=Math.min(P.max,P.hp+dm*.04)}
  if(h&&P.weapon=='hammer'){shake=Math.max(shake,10);for(let i=0;i<20;i++)parts.push({x:P.x+Math.cos(P.face)*30,y:P.y+Math.sin(P.face)*30,vx:(R()-.5)*300,vy:(R()-.5)*300,l:.5,c:'#6a5a44',s:3})}
@@ -225,9 +226,9 @@ function update(dt){P.time+=dt;
  if(mx||my)tgt=null;else if(tgt){const d=dist(P,tgt);if(d<5&&walkId==null)tgt=null;else if(d>=5){mx=(tgt.x-P.x)/d;my=(tgt.y-P.y)/d;if(d<20){mx*=d/20;my*=d/20}
   for(const b of obs){const dx=P.x-b.x,dy=P.y-b.y,dd=Math.hypot(dx,dy),m=P.r+b.r+3;if(dd<m+4){const nx=dx/dd,ny=dy/dd,dot=mx*nx+my*ny;if(dot<0){mx-=dot*nx;my-=dot*ny;const l=Math.hypot(mx,my);if(l>.05){mx/=l;my/=l}}}}}}
  const m=Math.hypot(mx,my);if(m>1){mx/=m;my/=m}
- P.blocking=!!(K.ShiftLeft||K.ShiftRight||BT.B)&&P.dashT<=0;
+ P.blocking=false;
  if(m>.15&&P.atkT<=0)P.face=Math.atan2(my,mx);
- if(edge('A',K.KeyJ||BT.A))attack(false);if(edge('H',K.KeyK||BT.H))attack(true);if(edge('T',K.KeyL||BT.T))thor();
+ if(edge('A',K.KeyJ||BT.A))attack(false);if(edge('T',K.KeyL||BT.T))thor();
  if(edge('D',K.Space||BT.D)&&P.dashCd<=0){P.dashT=.18;P.dashCd=.7-P.b.swift*.08;P.dashA=tgt&&dist(P,tgt)>5?ang(P,tgt):m>.15?Math.atan2(my,mx):P.face;S.dash()}
  if(m<.15&&P.atkT<=0){const n=nearest();if(n&&dist(n,P)<90)P.face=ang(P,n)}
  {const n=nearest();if((K.KeyJ||BT.A)&&P.atkCd<=0)attack(false);
