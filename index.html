@@ -57,7 +57,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <script>
 "use strict";
 const $=id=>document.getElementById(id),cv=$('c'),cx=cv.getContext('2d');
-let W,H,DPR,SC,SCb,Z=cl0(+localStorage.getItem('berserker_zoom')||1);function cl0(v){return Math.max(.6,Math.min(1.8,v))}
+let W,H,DPR,SC,SCb,Z=cl0(+localStorage.getItem('berserker_zoom')||1);function cl0(v){return Math.max(.6,Math.min(3.6,v))}
 function setZoom(z){Z=cl0(z);SC=SCb*Z;localStorage.setItem('berserker_zoom',Z.toFixed(2))}
 function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;SCb=Math.min(W,H)/360;SC=SCb*Z;layoutBtns()}
 addEventListener('resize',resize);
@@ -527,11 +527,11 @@ function update(dt){P.time+=dt;rageUpd(dt);odinUpd(dt);
  const dPress=edge('D',K.Space||BT.D);if(dPress&&P.dashCd>0&&!(P.rage>0)){const b=$('bD');b.classList.remove('nope');void b.offsetWidth;b.classList.add('nope')}if(dPress&&(P.dashCd<=0||P.rage>0)){P.dashT=.18;P.dashMax=3*(1-Math.min(.3,P.b.swift*.08));P.dashCd=P.rage>0?0:P.dashMax;P.dashA=tgt&&dist(P,tgt)>5?ang(P,tgt):m>.15?Math.atan2(my,mx):P.face;S.dash()}
  if(m<.15&&P.atkT<=0){const n=nearest();if(n&&dist(n,P)<90)P.face=ang(P,n)}
  {const n=nearest();if((K.KeyJ||BT.A)&&P.atkCd<=0)attack(false);
-  const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
+  const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22;P.popH=P.thH|0}if(P.emp){P.emp[0]-=dt;P.emp[1]-=dt}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
   P.throwCd=(P.throwCd||0)-dt;const melee=n&&dist(n,P)<WEAPONS[P.weapon].rng+n.r;
   if(melee&&inHand&&P.atkCd<=0&&P.dashT<=0){P.face=ang(P,n);attack(false)}
-  else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;
-   pax.push({rg:P.rage>0,x:P.x+Math.cos(a)*8,y:P.y-4+Math.sin(a)*8,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:rng/sp,rot:0,spin:Math.cos(a)<0?-22:22,w:P.weapon,pierce:1+P.b.pierce,hit:new Set()});
+  else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;const hd=P.hand=(P.hand??1)^1;P.emp=P.emp||[0,0];P.emp[hd]=P.resp;P.thH=hd;{const c=Math.cos(a);if(c<-.2)P.flip=1;else if(c>.2)P.flip=0}const hp=handPos(hd);(window.__thr=window.__thr||[]).push({hand:hd?'left':'right',x:+(hp.x-P.x).toFixed(1),y:+(hp.y-P.y).toFixed(1)});if(window.__thr.length>50)window.__thr.shift();
+   pax.push({rg:P.rage>0,hand:hd,x:hp.x+Math.cos(a)*3,y:hp.y+Math.sin(a)*3,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:rng/sp,rot:0,spin:Math.cos(a)<0?-22:22,w:P.weapon,pierce:1+P.b.pierce,hit:new Set()});
    axeSnd(0)}}
  for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*t.spin;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,10*({axe:1,battle:1.15,hammer:1.35,rune:.95}[t.w])*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15)*(t.rg?2:1),Math.atan2(t.vy,t.vx),t.w=='hammer'?90:50,false);hitstop=Math.max(hitstop,.02);t.imp=1;if(--t.pierce<=0){t.l=0;break}}
   for(const b of obs)if(t.l>0&&Math.hypot(b.x-t.x,b.y-t.y)<b.r){t.l=0;if(!t.imp){t.imp=1;axeSnd(1)}}if(t.l<=0)for(let i=0;i<10;i++)parts.push({x:t.x,y:t.y,vx:(R()-.5)*240,vy:(R()-.5)*240,l:.3+R()*.2,c:t.rg?(i%2?'#ff3a20':'#ffb080'):i%2?'#ffe08a':t.w=='rune'?'#9fd8ff':'#dfe6ee',s:2})}
@@ -622,7 +622,7 @@ function drawObs(o,t){const x=o.x,y=o.y;cx.fillStyle='rgba(0,0,0,.35)';cx.beginP
  else if(o.ty=='crystal'){cx.fillStyle=`rgba(80,140,230,${.6+Math.sin(t*2+o.s*9)*.2})`;cx.beginPath();cx.moveTo(x,y-28);cx.lineTo(x+8,y);cx.lineTo(x,y+6);cx.lineTo(x-8,y);cx.fill();cx.fillStyle='#bfe0ff55';cx.beginPath();cx.moveTo(x,y-28);cx.lineTo(x+3,y);cx.lineTo(x-2,y);cx.fill()}
  else{cx.fillStyle='#34343c';cx.beginPath();cx.ellipse(x,y-o.r*.3,o.r,o.r*.75,0,0,7);cx.fill();cx.fillStyle='#44444e';cx.beginPath();cx.ellipse(x-o.r*.25,y-o.r*.55,o.r*.5,o.r*.35,0,0,7);cx.fill()}}
 // ---------- sprite art (pre-rendered) ----------
-const RES=3,SPR={};let dead=[];
+let RES=3;const SPR={};let dead=[];
 function rgr(c,x,y,r,a,b){const g=c.createRadialGradient(x-r*.35,y-r*.45,r*.05,x,y,r*1.05);g.addColorStop(0,a);g.addColorStop(1,b);return g}
 function lgr(c,x0,y0,x1,y1,st){const g=c.createLinearGradient(x0,y0,x1,y1);st.forEach((s,i)=>g.addColorStop(i/(st.length-1),s));return g}
 function E(c,x,y,rx,ry,f,rot=0){c.fillStyle=f;c.beginPath();c.ellipse(x,y,Math.abs(rx),Math.abs(ry),rot,0,7);c.fill()}
@@ -786,7 +786,7 @@ function aBeast(c,ph,m){const s=Math.sin(ph),k=Math.cos(ph),bk='#4a1a14',bd='#0e
  F(c,[-6,-29,10,-29,8,-23+(m?3:0),-4,-23+(m?3:0)],'#1a0402');E(c,2,-26+(m?1.5:0),5,2,rgr(c,2,-26,5,'#ffd060','#ff4010'));for(let i=0;i<6;i++){F(c,[-5+i*2.6,-29,-4+i*2.6,-25.5,-3+i*2.6,-29],'#f0e8d0');F(c,[-4+i*2.4,-23+(m?3:0),-3+i*2.4,-26+(m?3:0),-2+i*2.4,-23+(m?3:0)],'#e8dcc0')}}
 function beastGlow(c){c.save();c.shadowColor='#ff8030';c.shadowBlur=8*RES;for(let i=0;i<9;i++)crack(c,-18+i*4.5,-14+(i%3)*8,14,i+70,'#ffd080',1.4);E(c,0,-6,8,6,'rgba(255,160,60,.5)');E(c,2,-26,4,1.6,'#ffe090');c.restore()}
 const VL=k=>k=='axe'?22:k=='battle'?40:WEAPONS[k].rng*.75;
-function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}
+function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};RES=8;for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}RES=3;loadHero()
  bakeSet('skeleton',40,46,30,aSkel);bakeSet('zombie',40,46,30,aZomb);bakeSet('wolf',56,34,20,(c,p,m)=>aWolf(c,p,m,0));bakeSet('spider',38,26,16,(c,p,m)=>aSpider(c,p,m,0));bakeSet('cyclops',76,90,58,aCyc);bakeSet('huscarl',50,52,32,aHus);bakeSet('brood',90,62,38,aBrood);
  bakeSet('jarl',96,104,72,aJarl);bakeSet('boneking',96,124,90,aBoneK);bakeSet('queen',104,90,56,(c,p,m)=>aQueen(c,p,m));bakeSet('fenrir',124,80,48,(c,p,m)=>aWolf(c,p,m,1));bakeSet('beast',150,150,98,aBeast);SPR.beastGlow=bake(150,150,98,beastGlow)}
 function frameOf(e,t){let m=0;const ty=e.type;
@@ -817,13 +817,28 @@ function drawPlayer(t){const x=P.x,y=P.y,f=P.face,w=WEAPONS[P.weapon];const mv=M
  let wa=f;if(P.atkT>0){const full=P.isHeavy?w.spd*2.2:w.spd,p=1-P.atkT/full,arc=P.isHeavy&&P.weapon=='hammer'?Math.PI*2:w.arc*(P.isHeavy?1.4:1),dir=P.combo%2?-1:1;wa=f-dir*arc/2+dir*arc*cl(p*1.4-.2,0,1);
   if(p>.3&&p<.9){cx.strokeStyle=P.isHeavy?'rgba(255,80,60,.5)':P.weapon=='rune'?'rgba(127,180,255,.45)':'rgba(220,230,255,.35)';cx.lineWidth=P.isHeavy?10:6;cx.beginPath();cx.arc(x,y-2,w.rng*.9,wa-dir*.9,wa,dir<0);cx.stroke()}}
  else wa=-Math.PI/2+(flip?-.45:.45)+Math.sin(P.wph*Math.PI/2)*.08+Math.sin(t*2)*.03;
- const ws=SPR.wp[P.weapon],drawW=()=>{const bs=P.atkT>0?(P.combo%2?-1:1):(flip?-1:1),hx=x+(flip?-7:7)*(P.atkT>0?.4:1),hy=y-(P.atkT>0?3:2);cx.save();cx.translate(hx,hy);cx.rotate(wa);cx.scale(1,bs);cx.drawImage(ws.c,-ws.ox,-ws.oy,ws.w,ws.h);cx.restore()};
- const has=!(P.resp>0);if(has&&Math.sin(wa)<-.2)drawW();const rg=P.rage>0?(P.rage<3?.55+.45*Math.sin(t*28):1)*Math.min(1,P.rage*2,(20-P.rage)*4):(P.rgFade>0?P.rgFade:0);
+ const ws=SPR.wp[P.weapon],drawW=()=>{const bs=P.atkT>0?(P.combo%2?-1:1):(flip?-1:1),hp0=handPos(P.combo%2),hx=hp0.x,hy=hp0.y;cx.save();cx.translate(hx,hy);cx.rotate(wa);cx.scale(1,bs);cx.drawImage(ws.c,-ws.ox,-ws.oy,ws.w,ws.h);cx.restore()};
+const sw=P.atkT>0?(P.combo%2):-1,emp=h=>P.resp>0&&P.emp&&P.emp[h]>0&&(P.thH|0)==h;const rg=P.rage>0?(P.rage<3?.55+.45*Math.sin(t*28):1)*Math.min(1,P.rage*2,(20-P.rage)*4):(P.rgFade>0?P.rgFade:0);
  if(rg>0){const g=cx.createRadialGradient(x,y-4,4,x,y-4,30);g.addColorStop(0,`rgba(255,40,20,${.35*rg})`);g.addColorStop(1,'rgba(255,0,0,0)');cx.fillStyle=g;cx.fillRect(x-30,y-34,60,60);cx.shadowColor=`rgba(255,30,10,${rg})`;cx.shadowBlur=8}
- spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);cx.shadowBlur=0;if(has&&Math.sin(wa)>=-.2)drawW();
- const hx2=x+(flip?-7:7),hy2=y-2;if(P.throwT>0){const p=1-P.throwT/.16;cx.strokeStyle=`rgba(230,235,255,${.6*(1-p)})`;cx.lineWidth=4;cx.beginPath();cx.arc(x,y-6,16,f-2.4+p*1.6,f-.4+p*.4);cx.stroke();cx.strokeStyle='#c89a74';cx.lineWidth=3.2;cx.lineCap='round';cx.beginPath();cx.moveTo(x+(flip?-6:6),y-4);cx.lineTo(x+(flip?-6:6)+Math.cos(f-1+p)*9,y-4+Math.sin(f-1+p)*9);cx.stroke()}
+ if(HERO.ok)drawHero(x,y,flip,P.hurtT>0,t,vsp,sw,emp);else spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);cx.shadowBlur=0;if(sw>=0&&!(P.resp>0))drawW();
+ const hpp=handPos(P.popH|0),hx2=hpp.x,hy2=hpp.y+10;if(P.throwT>0){const p=1-P.throwT/.16,th=handPos(P.thH|0);cx.strokeStyle=`rgba(230,235,255,${.6*(1-p)})`;cx.lineWidth=3;cx.beginPath();cx.arc(th.x,th.y,12,f-2.4+p*1.6,f-.4+p*.4);cx.stroke()}
  if(P.popT>0){const k=P.popT/.22;cx.save();cx.globalCompositeOperation='lighter';cx.fillStyle=`rgba(150,200,255,${k*.7})`;cx.beginPath();cx.arc(hx2,hy2-12,6+(1-k)*14,0,7);cx.fill();cx.strokeStyle=`rgba(255,240,180,${k})`;cx.lineWidth=1.5;cx.beginPath();cx.arc(hx2,hy2-12,4+(1-k)*20,0,7);cx.stroke();cx.restore()}
  if(P.blocking)spr(SPR.shield,x+Math.cos(f)*12,y-2+Math.sin(f)*12,flip);
+ cx.restore()}
+// ---------- hero art (cut from Dave's concept) ----------
+const HERO={ok:0,L:[],F:[],w:44.1,h:48,top:36,hands:[[-19.8,-8,2.44],[6.9,2.9,2.3]]};
+function loadHero(){if(HERO.im)return;const im=HERO.im=new Image();im.onload=()=>{let src=im;for(const hh of[im.height,192,96]){const k=document.createElement('canvas');k.height=hh;k.width=Math.round(im.width*hh/im.height);const c=k.getContext('2d');c.imageSmoothingQuality='high';c.drawImage(src,0,0,k.width,k.height);src=k;
+  const sil=document.createElement('canvas');sil.width=k.width;sil.height=hh;const s2=sil.getContext('2d');s2.drawImage(k,0,0);s2.globalCompositeOperation='source-in';s2.fillStyle='#07050a';s2.fillRect(0,0,k.width,hh);
+  const o=document.createElement('canvas');o.width=k.width;o.height=hh;const oc=o.getContext('2d'),d=Math.max(1,hh/150);for(let i=0;i<8;i++){const an=i/8*6.283;oc.drawImage(sil,Math.cos(an)*d,Math.sin(an)*d)}oc.drawImage(k,0,0);
+  const fl=document.createElement('canvas');fl.width=k.width;fl.height=hh;const fc=fl.getContext('2d');fc.drawImage(o,0,0);fc.globalCompositeOperation='source-atop';fc.fillStyle='rgba(255,236,226,.82)';fc.fillRect(0,0,k.width,hh);HERO.L.push(o);HERO.F.push(fl)}HERO.ok=1};im.src='hero.webp'}
+function handPos(h){const a=HERO.hands[h],fl=P.flip?-1:1,b=P.bob||0;return{x:P.x+a[0]*fl,y:P.y+a[1]+b}}
+function drawHero(x,y,flip,hurt,t,vsp,sw,emp){const mv=vsp>14||P.dashT>0,b=P.bob=mv?-Math.abs(Math.sin(P.wph*Math.PI/2))*1.6:Math.sin(t*2.2)*.35;
+ const px=48*SC*DPR,li=px>150?0:px>75?1:2,im=(hurt?HERO.F:HERO.L)[li],w=HERO.w,h=HERO.h,top=HERO.top,sx=im.width/w,split=.58;
+ const sway=Math.sin(t*3.1)*.05+Math.sin(P.wph*Math.PI)*(mv?.07:0)-(mv?Math.cos(P.face)*.06*(flip?-1:1):0);
+ cx.save();cx.translate(x,y+b);if(flip)cx.scale(-1,1);if(mv)cx.rotate(Math.sin(P.wph*Math.PI/2)*.035);cx.imageSmoothingQuality='high';
+ const sy=h*split;cx.drawImage(im,0,0,im.width,sy*sx,-w/2,-top,w,sy+.3);
+ cx.save();cx.translate(0,-top+sy);cx.transform(1,0,sway,1,0,0);cx.drawImage(im,0,sy*sx,im.width,im.height-sy*sx,-w/2,0,w,h-sy);cx.restore();
+ const ws=SPR.wp[P.weapon];for(let k=0;k<2;k++){if(k===sw||emp(k))continue;const [hx,hy,ra]=HERO.hands[k];cx.save();cx.translate(hx,hy);cx.rotate(ra+Math.sin(t*2+k)*.04+(mv?Math.sin(P.wph*Math.PI/2+k*3)*.12:0));cx.scale(.62,-.62);cx.drawImage(ws.c,-ws.ox+1.5,-ws.oy,ws.w,ws.h);cx.restore()}
  cx.restore()}
 function drawTitleBg(t){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1020');g.addColorStop(.7,'#1a0a0c');g.addColorStop(1,'#050506');cx.fillStyle=g;cx.fillRect(0,0,W,H);
  if(Math.sin(t*1.3)>.985){cx.fillStyle='rgba(180,210,255,.15)';cx.fillRect(0,0,W,H)}
