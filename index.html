@@ -251,7 +251,7 @@ function buildVillage(){let vs=777;const vr=()=>(vs=(vs*16807)%2147483647)/21474
  H.forEach((h,i)=>{const s=h.burn?houseSprB[i%3]:houseSpr[0];sp.push({c:s.c,x:h.x-s.ox,y:h.y-s.oy,k:h.y});
   for(const dx of [-44,-15,15,44])colls.push({x:h.x+dx,y:h.y-14,r:20});
   lights.push({x:h.x,y:h.y+8,r:70,a:.55,ph:vr()*7});
-  if(h.burn){const n=6+(vr()*3|0);for(let j=0;j<n;j++)fires.push({x:h.x-52+vr()*104,y:h.y-96+vr()*34,s:.9+vr()*.8,ph:vr()*7});lights.push({x:h.x,y:h.y-30,r:150,a:.5,ph:vr()*7,big:1})}
+  if(h.burn){const n=6+(vr()*3|0);for(let j=0;j<n;j++)fires.push({x:h.x-52+vr()*104,y:h.y-96+vr()*34,s:.9+vr()*.8,ph:vr()*7,h});lights.push({x:h.x,y:h.y-30,r:150,a:.5,ph:vr()*7,big:1,h})}
   // props around house
   g.save();vBarrel(g,h.x-66,h.y+4);vBarrel(g,h.x+64,h.y+2);if(vr()<.6)vBarrel(g,h.x+74,h.y+9);if(vr()<.7)vWood(g,h.x-40,h.y+16);g.restore()});
  // carts, crates, debris inside yard
@@ -278,25 +278,35 @@ function buildVillage(){let vs=777;const vr=()=>(vs=(vs*16807)%2147483647)/21474
  const fl=vGlowSpr(24,[[0,'rgba(255,240,180,1)'],[.3,'rgba(255,160,40,.8)'],[.7,'rgba(200,50,10,.3)'],[1,'rgba(120,20,0,0)']]);
  const lg=vGlowSpr(64,[[0,'rgba(255,150,60,.55)'],[.5,'rgba(220,90,30,.2)'],[1,'rgba(160,50,10,0)']]);
  const sm=vGlowSpr(24,[[0,'rgba(48,42,40,.7)'],[.6,'rgba(34,30,30,.35)'],[1,'rgba(20,20,20,0)']]);
- V={gc,sp,colls,fires,lights,fl,lg,sm,emb:[],smk:[],H};}
+ const st=vGlowSpr(24,[[0,'rgba(200,205,212,.6)'],[.6,'rgba(160,165,172,.28)'],[1,'rgba(120,125,130,0)']]);
+ const pud=[];for(let i=0;i<38;i++){const a=vr()*7,d=40+vr()*300;pud.push({x:C+Math.cos(a)*d*1.1,y:C+Math.sin(a)*d,w:10+vr()*22,h:3+vr()*5})}
+ H.forEach((h,i)=>{h.k=1;h.d=(i*0.37%1)*2.6+vr()*.6});
+ V={gc,sp,colls,fires,lights,fl,lg,sm,st,pud,emb:[],smk:[],H};}
+function vRainReset(){if(!V)return;for(const h of V.H){h.k=1;h.ex=0}V.emb=[];V.smk=[]}
 function vEnsure(){if(!V)buildVillage();return V}
 function vUpdate(dt){if(!V)return;const R2=Math.random;
- for(const f of V.fires){if(R2()<dt*4*f.s&&V.emb.length<160)V.emb.push({x:f.x+(R2()-.5)*10,y:f.y-10,vx:(R2()-.5)*20+8,vy:-30-R2()*40,l:1.5+R2()*2,ph:R2()*7});
-  if(R2()<dt*2.2&&V.smk.length<110)V.smk.push({x:f.x,y:f.y-20,vx:6+R2()*8,vy:-14-R2()*10,l:0,L:4+R2()*3,s:10+R2()*8})}
+ if(G.rain>0){for(const h of V.H){if(!h.burn||h.k<=0)continue;h.ex=(h.ex||0)+dt;h.k=Math.max(0,1-Math.max(0,h.ex-h.d)/3.5)}}
+ for(const f of V.fires){const k=f.h.k;if(k<1&&(k>0||f.h.ex-f.h.d<9)&&R2()<dt*(k>0?3:1.2)*(1-k*.5)&&V.smk.length<140)V.smk.push({x:f.x+(R2()-.5)*8,y:f.y-12,vx:(R2()-.5)*8,vy:-22-R2()*14,l:0,L:2.5+R2()*2,s:6+R2()*6,st:1});
+  if(k<=0)continue;if(R2()<dt*4*f.s*k&&V.emb.length<160)V.emb.push({x:f.x+(R2()-.5)*10,y:f.y-10,vx:(R2()-.5)*20+8,vy:-30-R2()*40,l:1.5+R2()*2,ph:R2()*7});
+  if(R2()<dt*2.2*k&&V.smk.length<110)V.smk.push({x:f.x,y:f.y-20,vx:6+R2()*8,vy:-14-R2()*10,l:0,L:4+R2()*3,s:10+R2()*8})}
  for(const e of V.emb){e.l-=dt;e.x+=(e.vx+Math.sin(e.ph+e.l*3)*14)*dt;e.y+=e.vy*dt}V.emb=V.emb.filter(e=>e.l>0);
  for(const s of V.smk){s.l+=dt;s.x+=s.vx*dt;s.y+=s.vy*dt;s.s+=dt*9}V.smk=V.smk.filter(s=>s.l<s.L)}
 function vView(){const hw=W/2/SC+80,hh=H/2/SC+120;return [cam.x-hw,cam.y-hh,cam.x+hw,cam.y+hh]}
 function vDrawGround(t){const [x0,y0,x1,y1]=vView();const sx=Math.max(0,x0|0),sy=Math.max(0,y0|0),ex=Math.min(WS,x1|0),ey=Math.min(WS,y1|0);
  if(ex>sx&&ey>sy)cx.drawImage(V.gc,sx,sy,ex-sx,ey-sy,sx,sy,ex-sx,ey-sy);
  cx.globalCompositeOperation='lighter';for(const l of V.lights){if(l.x<x0-l.r||l.x>x1+l.r||l.y<y0-l.r||l.y>y1+l.r)continue;
-  cx.globalAlpha=l.a*(.75+.15*Math.sin(t*9+l.ph)+.1*Math.sin(t*23+l.ph*2));cx.drawImage(V.lg,l.x-l.r,l.y-l.r*.6,l.r*2,l.r*1.2)}
- cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
+  cx.globalAlpha=l.a*(l.h?l.h.k:(l.r==70&&G.rain>0?1-.55*G.rain:1))*(.75+.15*Math.sin(t*9+l.ph)+.1*Math.sin(t*23+l.ph*2));if(cx.globalAlpha<.01)continue;cx.drawImage(V.lg,l.x-l.r,l.y-l.r*.6,l.r*2,l.r*1.2)}
+ cx.globalAlpha=1;cx.globalCompositeOperation='source-over';
+ if(G.rain>0){const r=G.rain;for(const p of V.pud){if(p.x<x0||p.x>x1||p.y<y0||p.y>y1)continue;cx.fillStyle=`rgba(40,52,70,${.45*r})`;cx.beginPath();cx.ellipse(p.x,p.y,p.w,p.h,0,0,7);cx.fill();
+  cx.fillStyle=`rgba(170,195,225,${.22*r*(.7+.3*Math.sin(t*2+p.x))})`;cx.beginPath();cx.ellipse(p.x-p.w*.2,p.y-p.h*.25,p.w*.45,p.h*.3,0,0,7);cx.fill()}
+  for(let i=0;i<Math.round(26*r);i++){const u=(t*2.2+i*.618)%1,q=Math.floor(t*2.2+i*.618)*7.31+i*3.7,x=x0+80+((Math.sin(q)*.5+.5)*(x1-x0-160)),y=y0+120+((Math.sin(q*1.7)*.5+.5)*(y1-y0-200));
+   cx.strokeStyle=`rgba(190,210,235,${.5*(1-u)*r})`;cx.lineWidth=.8;cx.beginPath();cx.ellipse(x,y,1+u*6,(1+u*6)*.4,0,0,7);cx.stroke()}}}
 function vSprites(list){const [x0,y0,x1,y1]=vView();for(const s of V.sp){if(s.x>x1||s.x+s.c.width<x0||s.y>y1||s.y+s.c.height<y0)continue;list.push({y:s.k,f:()=>cx.drawImage(s.c,s.x,s.y)})}}
 function vDrawTop(t){const [x0,y0,x1,y1]=vView();
- for(const s of V.smk){if(s.x<x0||s.x>x1||s.y<y0-60||s.y>y1)continue;cx.globalAlpha=Math.min(1,s.l)*(1-s.l/s.L);cx.drawImage(V.sm,s.x-s.s,s.y-s.s,s.s*2,s.s*2)}cx.globalAlpha=1;
+ for(const s of V.smk){if(s.x<x0||s.x>x1||s.y<y0-60||s.y>y1)continue;cx.globalAlpha=Math.min(1,s.l)*(1-s.l/s.L);cx.drawImage(s.st?V.st:V.sm,s.x-s.s,s.y-s.s,s.s*2,s.s*2)}cx.globalAlpha=1;
  cx.globalCompositeOperation='lighter';
- for(const f of V.fires){if(f.x<x0||f.x>x1||f.y<y0||f.y>y1+40)continue;for(let k=0;k<3;k++){const ph=t*(5+k*2)+f.ph+k*2.1,u=(t*1.6+f.ph+k*.33)%1,h=(30+k*8)*f.s*(1-u*.4),w=(12-k*2)*f.s*(1-u*.5);
-  cx.globalAlpha=.85-u*.6;cx.drawImage(V.fl,f.x-w+Math.sin(ph)*3,f.y-h*.9-u*16*f.s,w*2,h*1.6)}}
+ for(const f of V.fires){const fk=f.h.k;if(fk<=0||f.x<x0||f.x>x1||f.y<y0||f.y>y1+40)continue;for(let k=0;k<3;k++){const ph=t*(5+k*2)+f.ph+k*2.1,u=(t*1.6+f.ph+k*.33)%1,h=(30+k*8)*f.s*(1-u*.4)*(.3+.7*fk),w=(12-k*2)*f.s*(1-u*.5)*(.5+.5*fk);
+  cx.globalAlpha=(.85-u*.6)*Math.min(1,fk*1.5);cx.drawImage(V.fl,f.x-w+Math.sin(ph)*3,f.y-h*.9-u*16*f.s,w*2,h*1.6)}}
  for(const e of V.emb){if(e.x<x0||e.x>x1||e.y<y0||e.y>y1)continue;cx.globalAlpha=Math.min(1,e.l)*(.6+.4*Math.sin(t*20+e.ph));cx.fillStyle=e.l>1?'#ffd070':'#ff6a20';cx.fillRect(e.x,e.y,1.6,1.6)}
  cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
 
@@ -310,7 +320,7 @@ function startStage(i){pax=[];dead=[];tgt=null;walkId=null;marks=[];G.stage=i;se
  if(i==0){b.strokeStyle='#2c261c';b.lineWidth=18;b.beginPath();b.moveTo(0,WS/4);b.bezierCurveTo(200,200,400,420,WS/2,300);b.stroke()}
  if(i==1){for(let k=0;k<30;k++){b.fillStyle='rgba(40,70,120,.08)';b.beginPath();b.arc(rnd()*WS/2,rnd()*WS/2,10+rnd()*40,0,7);b.fill()}}
  if(i==2){for(let k=0;k<300;k++){b.strokeStyle='#22301f';b.beginPath();const x=rnd()*WS/2,y=rnd()*WS/2;b.moveTo(x,y);b.lineTo(x+2,y-5);b.stroke()}}
- P.vx=P.vy=0;P.flip=0;G.state='play';G.warp=1.8;G.wHit=0;G.scorch=null;banner(st.n,st.sub);showUI(true);stageMusic(i);
+ P.vx=P.vy=0;P.flip=0;G.state='play';G.warp=1.8;G.wHit=0;G.scorch=null;G.fring=null;G.rain=0;G.rainOn=(i==0&&G.seqI>=2)?1:0;vRainReset();banner(st.n,st.sub);showUI(true);stageMusic(i);
  if(cheat.boss)G.seqI=STAGES[i].seq.findIndex(s=>s.b);}
 let banT;function banner(a,b){const e=$('banner');e.innerHTML=a+(b?'<small>'+b+'</small>':'');e.style.opacity=1;clearTimeout(banT);banT=setTimeout(()=>e.style.opacity=0,2600)}
 // ---------- spawning ----------
@@ -426,7 +436,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
  if(!seg){if(ens.every(e=>e.hp<=0)){stageClear()}}
  else if(seg.b){if(!G.boss&&G.state=='play'){spawnBoss(seg.b);return}}
  else{G.segT+=dt;G.spawnT-=dt;const alive=ens.filter(e=>e.hp>0).length;if(G.spawnT<=0&&alive<32){G.spawnT=.85*seg.r*(1-Math.min(.4,G.segT/seg.t*.4));const n=G.segT<1.5?3:1;for(let i=0;i<n;i++)spawn(seg.w[Math.floor(R()*seg.w.length)])}
-  if(G.segT>=seg.t){G.seqI++;G.segT=0;const nx=st.seq[G.seqI];if(nx&&nx.w)banner('Wave '+(G.seqI+1),'')}}
+  if(G.segT>=seg.t){G.seqI++;G.segT=0;const nx=st.seq[G.seqI];if(nx&&nx.w)banner('Wave '+(G.seqI+1),'')}if(G.stage==0&&G.seqI>=2&&!G.rainOn)G.rainOn=1}
  // player
  let mx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0),my=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0);
  if(!mx&&!my&&(J.x||J.y)){mx=J.x;my=J.y}if(mx||my)tgt=null;else if(tgt){const d=dist(P,tgt);if(d<5&&walkId==null)tgt=null;else if(d>=5){mx=(tgt.x-P.x)/d;my=(tgt.y-P.y)/d;if(d<20){mx*=d/20;my*=d/20}
@@ -484,7 +494,7 @@ function draw(){const t=performance.now()/1000;cx.setTransform(DPR,0,0,DPR,0,0);
  if(G.stage==0&&V)vDrawGround(t);else cx.drawImage(bgC,0,0,WS,WS);cx.strokeStyle='#300';cx.lineWidth=6;cx.strokeRect(0,0,WS,WS);
  const list=[...(G.stage==0&&V?[]:obs).map(o=>({y:o.y,f:()=>drawObs(o,t)})),...ens.map(e=>({y:e.y,f:()=>drawEnemy(e,t)})),...(G.warp>.8?[]:[{y:P.y,f:()=>drawPlayerW(t)}])];
  for(const t of pax){const ws=SPR.wp[t.w],h=VL(t.w)*.55;if(t.rg){cx.fillStyle='rgba(255,40,20,.28)';cx.beginPath();cx.arc(t.x,t.y,h+6,0,7);cx.fill();cx.fillStyle='rgba(255,90,40,.5)';cx.beginPath();cx.arc(t.x,t.y,h*.5+3,0,7);cx.fill()}cx.save();cx.translate(t.x,t.y);cx.rotate(t.rot);cx.globalAlpha=.25;cx.drawImage(ws.c,-ws.ox-h,-ws.oy,ws.w,ws.h);cx.rotate(-t.spin*.012);cx.globalAlpha=1;cx.drawImage(ws.c,-ws.ox-h,-ws.oy,ws.w,ws.h);cx.restore()}
- if(G.scorch)drawScorch(G.scorch);for(const k of marks){cx.strokeStyle=`rgba(220,200,160,${k.l*.45})`;cx.lineWidth=1.5;cx.beginPath();cx.ellipse(k.x,k.y,4+(1-k.l)*8,(4+(1-k.l)*8)*.5,0,0,7);cx.stroke()}
+ if(G.scorch)drawScorch(G.scorch);if(G.fring)drawFring(G.fring,t);for(const k of marks){cx.strokeStyle=`rgba(220,200,160,${k.l*.45})`;cx.lineWidth=1.5;cx.beginPath();cx.ellipse(k.x,k.y,4+(1-k.l)*8,(4+(1-k.l)*8)*.5,0,0,7);cx.stroke()}
  for(const c of coins){cx.fillStyle='#e0b840';cx.beginPath();cx.arc(c.x,c.y,3.5,0,7);cx.fill();cx.fillStyle='#fff6';cx.fillRect(c.x-1,c.y-2,1.5,1.5)}
  for(const p of parts)if(p.blood&&p.l<.15){}
  if(G.stage==0&&V)vSprites(list);drawDead(G.state=='play'||G.state=='intro'||G.state=='clear'?1/60:0);list.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
@@ -494,6 +504,7 @@ function draw(){const t=performance.now()/1000;cx.setTransform(DPR,0,0,DPR,0,0);
  if(G.stage==0&&V)vDrawTop(t);drawRageFx(t);if(G.warp>0)drawWarp(t);cx.textAlign='center';for(const n of nums){cx.globalAlpha=Math.min(1,n.l*2);cx.font=`bold ${Math.round(12*n.s)}px Georgia`;cx.fillStyle='#000';cx.fillText(n.v,n.x+1,n.y+1);cx.fillStyle=n.c;cx.fillText(n.v,n.x,n.y)}cx.globalAlpha=1;
  cx.setTransform(DPR,0,0,DPR,0,0);
  if(G.warp>.8){cx.fillStyle=`rgba(4,6,14,${cl((1.8-G.warp)*.55,0,.55)})`;cx.fillRect(0,0,W,H)}
+ if(G.rain>0&&G.stage==0&&P)drawRain(t);
  // vignette + storm tint
  const g=cx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,G.stage==1?'rgba(0,0,10,.8)':'rgba(10,0,0,.65)');cx.fillStyle=g;cx.fillRect(0,0,W,H);
  if(P.hurtT>0){cx.fillStyle=`rgba(150,0,0,${P.hurtT})`;cx.fillRect(0,0,W,H)}if(G.flash>0){cx.fillStyle=`rgba(200,225,255,${G.flash*1.5})`;cx.fillRect(0,0,W,H)}
@@ -723,7 +734,7 @@ function drawTitleBg(t){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(
  cx.fillStyle='#07080b';cx.beginPath();cx.moveTo(0,H);for(let i=0;i<=12;i++)cx.lineTo(i/12*W,H*.78-Math.abs(Math.sin(i*1.7))*H*.12);cx.lineTo(W,H);cx.fill();
  for(let i=0;i<40;i++){const x=(i*97+t*30)%W,y=H*.85+Math.sin(i)*20-((t*20+i*13)%80);cx.fillStyle=`rgba(255,${80+i%5*20},30,${.4})`;cx.fillRect(x,y,2,2)}}
 // ---------- lightning arrival ----------
-function warpStrike(){G.wHit=1;G.flash=.45;shake=16;S.thunder();G.scorch={x:P.x,y:P.y,l:5};
+function warpStrike(){G.wHit=1;G.flash=.45;shake=16;S.thunder();G.scorch={x:P.x,y:P.y,l:5};G.fring={x:P.x,y:P.y+8,l:3};
  const bx=[],x0=P.x,top=cam.y-H/SC/2-20;let x=x0+(R()-.5)*60,y=top;bx.push([x,y]);while(y<P.y-6){y+=18+R()*16;x+=(R()-.5)*34;x+=(x0-x)*Math.min(1,(y-top)/(P.y-top))*.5;bx.push([x,Math.min(y,P.y)])}
  const fk=[];for(let k=0;k<2;k++){const i=2+Math.floor(R()*(bx.length-3));let[fx2,fy]=bx[i];const f=[[fx2,fy]],d=R()<.5?-1:1;for(let j=0;j<4;j++){fx2+=d*(10+R()*16);fy+=12+R()*12;f.push([fx2,fy])}fk.push(f)}
  G.wBolt=[bx,...fk];
@@ -734,6 +745,22 @@ function warpUpd(dt){G.warp-=dt;if(!G.wHit&&G.warp<=.8)warpStrike();if(G.scorch)
 function skipWarp(){if(!G.wHit)warpStrike();G.warp=0;G.flash=Math.min(G.flash,.25);P.inv=Math.max(P.inv,.3)}
 function drawScorch(s){if(s.l<=0){G.scorch=null;return}const a=Math.min(1,s.l/2);cx.fillStyle=`rgba(10,8,6,${.55*a})`;cx.beginPath();cx.ellipse(s.x,s.y+8,26,11,0,0,7);cx.fill();
  cx.strokeStyle=`rgba(255,140,50,${.6*a*Math.min(1,s.l-3>0?1:s.l/3)})`;cx.lineWidth=2;cx.beginPath();cx.ellipse(s.x,s.y+8,30,13,0,0,7);cx.stroke()}
+let FRS;function fringUpd(dt){const f=G.fring;if(!f)return;f.l-=dt;if(f.l<=0){G.fring=null;return}
+ if(Math.random()<dt*22){const a=Math.random()*7;parts.push({x:f.x+Math.cos(a)*30,y:f.y+Math.sin(a)*13-4,vx:(Math.random()-.5)*16,vy:-25-Math.random()*35,l:.6+Math.random()*.6,c:Math.random()<.5?'#ffd070':'#ff6a20',s:1.5})}}
+function drawFring(f,t){if(!FRS)FRS=[vGlowSpr(24,[[0,'rgba(255,240,180,1)'],[.3,'rgba(255,160,40,.8)'],[.7,'rgba(200,50,10,.3)'],[1,'rgba(120,20,0,0)']]),vGlowSpr(64,[[0,'rgba(255,150,60,.55)'],[.5,'rgba(220,90,30,.2)'],[1,'rgba(160,50,10,0)']])];
+ const a=Math.min(1,f.l/.5)*Math.min(1,(3-f.l)/.15),grow=Math.min(1,(3-f.l)/.25);cx.globalCompositeOperation='lighter';
+ cx.globalAlpha=.7*a;cx.drawImage(FRS[1],f.x-70,f.y-34,140,68);
+ const N=18;for(let i=0;i<N;i++){const an=i/N*6.283,x=f.x+Math.cos(an)*30,y=f.y+Math.sin(an)*13,back=Math.sin(an)<0;
+  for(let k=0;k<2;k++){const u=(t*1.8+i*.37+k*.5)%1,h=(14+k*5)*(1-u*.4)*grow*(.75+.25*Math.sin(t*9+i)),w=(5-k)*(1-u*.4);
+   cx.globalAlpha=a*(.9-u*.6)*(back?.7:1);cx.drawImage(FRS[0],x-w+Math.sin(t*7+i+k)*1.5,y-h*.9-u*8,w*2,h*1.5)}}
+ cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
+let RN=null;function rainSnd(){const want=(G.rain>0&&G.stage==0&&G.state=='play'&&sfxOn&&AC)?G.rain*.09:0;
+ if(!RN){if(!want)return;try{noise(.01,.0001);const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.5;g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);s.start();RN={s,g}}catch(e){return}}
+ RN.g.gain.setTargetAtTime(want,AC.currentTime,.3)}
+function drawRain(t){const r=G.rain;cx.fillStyle=`rgba(18,34,62,${.22*r})`;cx.fillRect(0,0,W,H);
+ const n=Math.round(Math.min(160,W*H/2600)*r);cx.strokeStyle='rgba(185,205,235,.38)';cx.lineWidth=1;cx.beginPath();
+ for(let i=0;i<n;i++){const sp=.9+(i*.37%1)*.5,u=(t*sp*1.6+i*.6180339)%1,x=((i*97.13)%1*1.25-.15)*W+u*H*.25-0,y=u*(H+60)-30,L=14+(i%5)*3;
+  cx.moveTo(x,y);cx.lineTo(x-L*.3,y-L)}cx.stroke()}
 function drawPlayerW(t){if(!(G.warp>0)){drawPlayer(t);return}const k=Math.min(1,(.8-G.warp)/.5),sy=.62+.38*k;
  cx.save();cx.translate(P.x,P.y+11);cx.scale(1+(1-sy)*.35,sy);cx.translate(-P.x,-P.y-11);drawPlayer(t);cx.restore();
  cx.strokeStyle=`rgba(140,200,255,${.9*(G.warp/.8)})`;cx.lineWidth=1.5;for(let i=0;i<3;i++){let a=R()*7,x=P.x+Math.cos(a)*10,y=P.y-6+Math.sin(a)*14;cx.beginPath();cx.moveTo(x,y);for(let j=0;j<3;j++){x+=(R()-.5)*14;y+=(R()-.5)*14;cx.lineTo(x,y)}cx.stroke()}}
@@ -741,8 +768,8 @@ function drawWarp(t){if(!G.wBolt||G.warp<.6||!G.wHit)return;const al=Math.min(1,
  for(const [w,c] of [[7,`rgba(120,170,255,${.35*al})`],[2.5,`rgba(240,248,255,${al})`]]){cx.strokeStyle=c;G.wBolt.forEach((b,i)=>{cx.lineWidth=i?w*.5:w;cx.beginPath();cx.moveTo(b[0][0],b[0][1]);for(const q of b)cx.lineTo(q[0],q[1]);cx.stroke()})}cx.lineCap='butt'}
 // ---------- loop ----------
 let last=performance.now();
-function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;
- if(G.state=='play'||G.state=='intro'||G.state=='clear'){if(cheat.ff)dt*=2;if(G.stage==0)vUpdate(dt);
+function loop(now){rainSnd();let dt=Math.min(.05,(now-last)/1000);last=now;
+ if(G.state=='play'||G.state=='intro'||G.state=='clear'){if(cheat.ff)dt*=2;if(G.rainOn&&G.stage==0)G.rain=Math.min(1,(G.rain||0)+dt/2.5);fringUpd(dt);if(G.stage==0)vUpdate(dt);
   if(hitstop>0){hitstop-=dt;fx(dt*.2)}else{if(G.state=='intro'){G.introT-=dt;camFollow(dt);if(G.introT<=0)G.state='play'}else if(G.state=='clear'){camFollow(dt);for(const c of coins){c.x+=(P.x-c.x)*dt*5;c.y+=(P.y-c.y)*dt*5;if(dist(c,P)<10&&!c.got){c.got=1;P.gold+=c.v}}coins=coins.filter(c=>!c.got)}else if(G.warp>0){warpUpd(dt);camFollow(dt)}else update(dt);fx(dt)}}
  draw();requestAnimationFrame(loop)}
 // ---------- menus ----------
