@@ -433,6 +433,17 @@ function showUI(on){$('ui').classList.toggle('on',on)}
 function ov(id){['title','cheat','pause','shop','dead','win','cont'].forEach(o=>$(o).classList.toggle('on',o==id))}
 let pressed={};const BTL={};function edge(k,v){v=!!(v||BTL[k]);BTL[k]=0;const r=v&&!pressed[k];pressed[k]=v;return r}
 // ---------- combat ----------
+const WW={R:70,N:5,HR:80,T:.5,CD:2.75};
+function wwUpd(dt){P.wwCd=(P.wwCd||0)-dt;if(P.wwT>0){P.wwT-=dt;if(R()<dt*40){const a=R()*7;parts.push({x:P.x+Math.cos(a)*WW.HR*.8,y:P.y-4+Math.sin(a)*WW.HR*.4,vx:Math.cos(a+1.6)*140,vy:Math.sin(a+1.6)*70,l:.25,c:R()<.5?'#fff2c0':'#ffd060',s:1.6})}return}
+ if(P.wwCd>0||G.warp>0)return;let n=0,q=0;for(const e of ens){if(e.hp<=0)continue;const dx=e.x-P.x,dy=e.y-P.y;if(Math.hypot(dx,dy)<WW.R+e.r*.5){n++;q|=1<<((dx>=0?1:0)+(dy>=0?2:0))}}
+ const nq=(q&1)+(q>>1&1)+(q>>2&1)+(q>>3&1);if(n<WW.N||nq<3)return;
+ P.wwT=WW.T;P.wwCd=WW.CD;P.wwN=(P.wwN||0)+1;const dm=pdmg()*1.1*(P.rage>0?2:1);P.wwLast=[];
+ for(const e of ens){if(e.hp<=0)continue;const d=dist(e,P);if(d<WW.HR+e.r){const a=ang(P,e);hurtE(e,dm,a,e.type=='boss'?40:160,false);P.wwLast.push(dm)}}
+ noise(.35,.05,1400);for(let i=0;i<14;i++){const a=R()*7;parts.push({x:P.x+Math.cos(a)*14,y:P.y+8+Math.sin(a)*5,vx:Math.cos(a)*70,vy:Math.sin(a)*25-10,l:.5+R()*.3,c:'rgba(120,100,80,.45)',s:4+R()*3})}}
+function drawWW(t){if(!(P&&P.wwT>0))return;const k=1-P.wwT/WW.T,base=k*Math.PI*4,al=Math.min(1,P.wwT/.12,k/.08+.2),cy=P.y-4;cx.save();cx.globalCompositeOperation='lighter';
+ for(let j=0;j<3;j++){const r=(WW.HR*(.55+j*.2)),ry=r*.5;for(let i=0;i<10;i++){const a0=base+j*2.1-i*.16;cx.strokeStyle=j==1?`rgba(255,230,160,${al*(1-i/10)*.55})`:`rgba(220,230,245,${al*(1-i/10)*.45})`;cx.lineWidth=(j==1?4:2.5)*(1-i/12);cx.beginPath();cx.ellipse(P.x,cy,r,ry,0,a0-.35,a0);cx.stroke()}}
+ cx.strokeStyle=`rgba(255,255,255,${.25*al})`;cx.lineWidth=1.2;cx.beginPath();cx.ellipse(P.x,cy,WW.HR*.75,WW.HR*.375,0,0,7);cx.stroke();
+ for(let i=0;i<8;i++){const a=base*1.3+i*.785;cx.fillStyle=`rgba(255,${200+i*6},120,${al*.8})`;cx.fillRect(P.x+Math.cos(a)*WW.HR*.8-1,cy+Math.sin(a)*WW.HR*.4-1,2.2,2.2)}cx.restore()}
 function pdmg(){return WEAPONS[P.weapon].dmg*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)}
 function attack(heavy){const w=WEAPONS[P.weapon];if(P.atkCd>0||P.dashT>0||P.resp>0)return;
  if(heavy){P.heavyT=w.spd*2.2;P.atkCd=w.spd*2.6;P.atkT=P.heavyT;P.isHeavy=true;P.hitDone=false;}
@@ -547,11 +558,12 @@ function update(dt){P.time+=dt;rageUpd(dt);hpdUpd(dt);odinUpd(dt);
  if(edge('A',K.KeyJ||BT.A))attack(false);if(edge('T',K.KeyL||BT.T))thor();if(edge('R',K.KeyB||BT.R))rageOn();if(edge('O',K.KeyO||BT.O))odinOn();
  const dPress=edge('D',K.Space||BT.D);if(dPress&&P.dashCd>0&&!(P.rage>0)){const b=$('bD');b.classList.remove('nope');void b.offsetWidth;b.classList.add('nope')}if(dPress&&(P.dashCd<=0||P.rage>0)){P.dashT=.18;P.dashMax=3*(1-Math.min(.3,P.b.swift*.08));P.dashCd=P.rage>0?0:P.dashMax;P.dashA=tgt&&dist(P,tgt)>5?ang(P,tgt):m>.15?Math.atan2(my,mx):P.face;S.dash()}
  if(m<.15&&P.atkT<=0){const n=nearest();if(n&&dist(n,P)<90)P.face=ang(P,n)}
+ wwUpd(dt);
  {const n=nearest();if((K.KeyJ||BT.A)&&P.atkCd<=0)attack(false);
   const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22;P.popH=P.thH|0}if(P.emp){P.emp[0]-=dt;P.emp[1]-=dt}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
   P.throwCd=(P.throwCd||0)-dt;const melee=n&&dist(n,P)<WEAPONS[P.weapon].rng+n.r;
-  if(melee&&inHand&&P.atkCd<=0&&P.dashT<=0){P.face=ang(P,n);attack(false)}
-  else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;const hd=P.hand=(P.hand??1)^1;P.emp=P.emp||[0,0];P.emp[hd]=P.resp;P.thH=hd;{const c=Math.cos(a);if(c<-.2)P.flip=1;else if(c>.2)P.flip=0}const hp=handPos(hd);(window.__thr=window.__thr||[]).push({hand:hd?'left':'right',x:+(hp.x-P.x).toFixed(1),y:+(hp.y-P.y).toFixed(1)});if(window.__thr.length>50)window.__thr.shift();
+  if(!(P.wwT>0)&&melee&&inHand&&P.atkCd<=0&&P.dashT<=0){P.face=ang(P,n);attack(false)}
+  else if(!(P.wwT>0)&&!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;const hd=P.hand=(P.hand??1)^1;P.emp=P.emp||[0,0];P.emp[hd]=P.resp;P.thH=hd;{const c=Math.cos(a);if(c<-.2)P.flip=1;else if(c>.2)P.flip=0}const hp=handPos(hd);(window.__thr=window.__thr||[]).push({hand:hd?'left':'right',x:+(hp.x-P.x).toFixed(1),y:+(hp.y-P.y).toFixed(1)});if(window.__thr.length>50)window.__thr.shift();
    pax.push({rg:P.rage>0,hand:hd,x:hp.x+Math.cos(a)*3,y:hp.y+Math.sin(a)*3,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:rng/sp,rot:0,spin:Math.cos(a)<0?-22:22,w:P.weapon,pierce:1+P.b.pierce,hit:new Set()});
    axeSnd(0)}}
  for(const t of pax){t.l-=dt;t.x+=t.vx*dt;t.y+=t.vy*dt;t.rot+=dt*t.spin;for(const e of ens){if(e.hp<=0||t.hit.has(e)||Math.hypot(e.x-t.x,e.y-t.y)>e.r+5)continue;t.hit.add(e);hurtE(e,10*({axe:1,battle:1.15,hammer:1.35,rune:.95}[t.w])*(1+P.b.dmg*.15)*(1+(P.lvl-1)*.08)*(1+P.b.pierce*.15)*(t.rg?2:1),Math.atan2(t.vy,t.vx),t.w=='hammer'?90:50,false);hitstop=Math.max(hitstop,.02);t.imp=1;if(--t.pierce<=0){t.l=0;break}}
@@ -607,7 +619,7 @@ function draw(){const t=performance.now()/1000;cx.setTransform(DPR,0,0,DPR,0,0);
  for(const s of shots){if(s.ring){cx.strokeStyle='rgba(255,90,40,'+(1-s.rr/s.max)+')';cx.lineWidth=8;cx.beginPath();cx.arc(s.x,s.y,s.rr,0,7);cx.stroke()}else{cx.fillStyle=s.col;cx.beginPath();cx.arc(s.x,s.y,s.r,0,7);cx.fill()}}
  for(const p of parts){cx.globalAlpha=Math.min(1,p.l*3);cx.fillStyle=p.c;cx.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s)}cx.globalAlpha=1;
  for(const b of bolts){cx.strokeStyle='#cfe6ff';cx.lineWidth=3;cx.shadowColor='#7fb4ff';cx.shadowBlur=12;cx.beginPath();let x=b.x,y=b.y-260;cx.moveTo(x,y);while(y<b.y){y+=26;x=b.x+(R()-.5)*30*(1-(y-b.y+260)/260+.3);cx.lineTo(x,Math.min(y,b.y))}cx.stroke();cx.shadowBlur=0}
- if(G.stage==0&&V)vDrawTop(t);drawRageFx(t);drawRavens(t);if(G.warp>0)drawWarp(t);cx.textAlign='center';for(const n of nums){cx.globalAlpha=Math.min(1,n.l*2);cx.font=`bold ${Math.round(12*n.s)}px Georgia`;cx.fillStyle='#000';cx.fillText(n.v,n.x+1,n.y+1);cx.fillStyle=n.c;cx.fillText(n.v,n.x,n.y)}cx.globalAlpha=1;
+ if(G.stage==0&&V)vDrawTop(t);drawRageFx(t);drawWW(t);drawRavens(t);if(G.warp>0)drawWarp(t);cx.textAlign='center';for(const n of nums){cx.globalAlpha=Math.min(1,n.l*2);cx.font=`bold ${Math.round(12*n.s)}px Georgia`;cx.fillStyle='#000';cx.fillText(n.v,n.x+1,n.y+1);cx.fillStyle=n.c;cx.fillText(n.v,n.x,n.y)}cx.globalAlpha=1;
  cx.setTransform(DPR,0,0,DPR,0,0);
  if(G.warp>.8){cx.fillStyle=`rgba(4,6,14,${cl((1.8-G.warp)*.55,0,.55)})`;cx.fillRect(0,0,W,H)}
  if(G.rain>0&&G.stage==0&&P)drawRain(t);
@@ -902,6 +914,7 @@ function h8Sector(vx,vy,cur){const a=Math.atan2(vy,vx),S=Math.PI/4;let d=Math.ab
 function drawHero8(x,y,hurt,t,vsp,sw,emp){const dt=Math.min(.05,Math.max(0,t-(H8.lt||t)));H8.lt=t;
  const mv=vsp>14||P.dashT>0,tgt=mv?Math.min(1,vsp/90):0;H8.ws+=(tgt-H8.ws)*Math.min(1,dt*9);const s=H8.ws;
  if(mv)H8.dir=h8Sector(P.vx||0,P.vy||0,H8.dir);else if(P.throwT>0||P.atkT>0)H8.dir=h8Sector(Math.cos(P.face),Math.sin(P.face),H8.dir);
+ if(P.wwT>0){const q=(1-P.wwT/WW.T)*Math.PI*4;H8.dir=h8Sector(Math.cos(q),Math.sin(q),H8.dir)}
  H8.ph+=dt*(4+7*s)*(s>.02?1:0)*Math.PI*.55;const ph=H8.ph;
  const F=H8.D[H8.dir];let vi=0;if(sw>=0)vi=sw+1;if(emp(0))vi=1;else if(emp(1))vi=2;
  const px=48*SC*DPR,li=px>170?0:px>85?1:2,im=(hurt?F.v[vi].F:F.v[vi].L)[li],w=F.w,h=F.h,top=F.top,sc=im.height/h;
