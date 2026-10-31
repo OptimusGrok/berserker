@@ -496,7 +496,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
  if(edge('D',K.Space||BT.D)&&P.dashCd<=0){P.dashT=.18;P.dashCd=.7-P.b.swift*.08;P.dashA=tgt&&dist(P,tgt)>5?ang(P,tgt):m>.15?Math.atan2(my,mx):P.face;S.dash()}
  if(m<.15&&P.atkT<=0){const n=nearest();if(n&&dist(n,P)<90)P.face=ang(P,n)}
  {const n=nearest();if((K.KeyJ||BT.A)&&P.atkCd<=0)attack(false);
-  const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22;tone(1400,.08,'triangle',.08,2200)}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
+  const had=P.resp>0;P.resp=(P.resp||0)-dt;if(had&&P.resp<=0){P.popT=.22}P.popT-=dt;P.throwT-=dt;const inHand=P.resp<=0;
   P.throwCd=(P.throwCd||0)-dt;const melee=n&&dist(n,P)<WEAPONS[P.weapon].rng+n.r;
   if(melee&&inHand&&P.atkCd<=0&&P.dashT<=0){P.face=ang(P,n);attack(false)}
   else if(!melee&&n&&inHand&&P.atkT<=0&&P.dashT<=0&&P.throwCd<=0&&dist(n,P)<1.5*W/SC){const a=ang(P,n),rng=1.5*W/SC,sp=400;P.face=a;P.throwCd=Math.max(.42,.56*(1-P.b.swift*.04)*(1-Math.min(.12,(P.lvl-1)*.015)))*(P.rage>0?.5:1);P.resp=.35*(P.rage>0?.5:1);P.throwT=.16;
@@ -518,7 +518,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
  for(const s of shots){s.l-=dt;if(s.ring){s.rr+=260*dt;if(!s.hit&&Math.abs(dist(s,P)-s.rr)<14){s.hit=1;hurtP(s.dm,ang(s,P))}if(s.rr>s.max)s.l=0;continue}
   s.x+=s.vx*dt;s.y+=s.vy*dt;if(Math.hypot(s.x-P.x,s.y-P.y)<s.r+P.r){s.l=0;if(P.blocking||P.dashT>0||cheat.inv||P.inv>0){}else if(s.slow)P.slowT=1.5;hurtP(s.dm,Math.atan2(s.vy,s.vx))}}
  shots=shots.filter(s=>s.l>0);
- for(const c of coins){c.t+=dt;c.x+=c.vx*dt;c.y+=c.vy*dt;c.vx*=.9;c.vy*=.9;const d=dist(c,P);if(c.t>.4&&d<120){const a=ang(c,P);c.x+=Math.cos(a)*400*dt;c.y+=Math.sin(a)*400*dt}if(d<P.r+6){c.got=1;P.gold+=c.v;S.coin()}}
+ for(const c of coins){c.t+=dt;c.x+=c.vx*dt;c.y+=c.vy*dt;c.vx*=.9;c.vy*=.9;const d=dist(c,P);if(c.t>.4&&d<120){const a=ang(c,P);c.x+=Math.cos(a)*400*dt;c.y+=Math.sin(a)*400*dt}if(d<P.r+6){c.got=1;P.gold+=c.v;}}
  coins=coins.filter(c=>!c.got&&c.t<25);
  camFollow(dt)}
 function nearest(){let b=null,bd=1e9;for(const e of ens){const d=dist(e,P);if(e.hp>0&&d<bd){bd=d;b=e}}return b}
