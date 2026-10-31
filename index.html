@@ -509,7 +509,7 @@ function odinOn(){if(!G.odReady||G.odS>0||G.state!='play')return;G.odReady=0;G.o
 function rvTarget(){let best=null,bs=1e9;const [x0,y0,x1,y1]=vView();for(const e of ens){if(e.hp<=0||e.x<x0||e.x>x1||e.y<y0||e.y>y1)continue;const sc=(e.rvN||0)*(e.type=='boss'?.2:1)+R()*.5;if(sc<bs){bs=sc;best=e}}return best}
 function odinUpd(dt){if(G.odS>0){G.odS-=dt;G.odAcc+=dt*28;while(G.odAcc>=1){G.odAcc--;const [x0,y0,x1]=vView(),r=RVP.pop()||{};const side=R();r.x=side<.7?x0+R()*(x1-x0):(side<.85?x0-20:x1+20);r.y=y0-30-R()*40;if(side>=.7)r.y=y0+R()*120;r.t=null;r.pk=0;r.pt=0;r.ph=R()*6;r.sp=520+R()*160;r.cx=0;r.cy=0;r.ca=R()*6;ravens.push(r);G.odSpawned++}
   if(G.odS<=0){G.odS=0;G.odT=0}}
- else if(!G.odReady){G.odT=(G.odT||0)+dt;if(G.odT>=120){G.odReady=1;tone(660,.15,'triangle',.08,990)}}
+ else if(!G.odReady){G.odT=(G.odT||0)+dt;if(G.odT>=60){G.odReady=1;tone(660,.15,'triangle',.08,990)}}
  const dm0=pdmg()*3;
  for(let i=ravens.length-1;i>=0;i--){const r=ravens[i];r.ph+=dt*22;
   if(!r.t||r.t.hp<=0){if(r.pk>0){r.dead=1}else{r.t=rvTarget();if(r.t)r.t.rvN=(r.t.rvN||0)+1}}
@@ -529,7 +529,7 @@ function rageOn(){if(!G.rgReady||P.rage>0||G.state!='play')return;G.rgReady=0;P.
 function rageUpd(dt){if(P.rage>0){P.rage-=dt;P.hp=Math.min(P.max,P.hp+P.max*.5/20*dt);if(R()<dt*6)parts.push({x:P.x+(R()-.5)*20,y:P.y-4+(R()-.5)*16,vx:0,vy:-30,l:.6,c:'#7dff96',s:2});P.hbT-=dt;if(P.hbT<=0){P.hbT=.85;tone(58,.12,'sine',.28,40);setTimeout(()=>tone(52,.12,'sine',.2,36),170)}
   if(R()<dt*7)parts.push({x:P.x+(R()-.5)*16,y:P.y+4,vx:(R()-.5)*10,vy:-30-R()*30,l:.6+R()*.4,c:R()<.5?'#ff5a2a':'#ffb060',s:1.6});
   if(P.rage<=0){P.rage=0;P.dashCd=0;P.rgFade=1;G.rgT=0}}
- else{if(P.rgFade>0)P.rgFade-=dt*1.5;if(!G.rgReady){G.rgT=(G.rgT||0)+dt;if(G.rgT>=90){G.rgReady=1;tone(220,.15,'sawtooth',.12,440)}}}}
+ else{if(P.rgFade>0)P.rgFade-=dt*1.5;if(!G.rgReady){G.rgT=(G.rgT||0)+dt;if(G.rgT>=90/1.3){G.rgReady=1;tone(220,.15,'sawtooth',.12,440)}}}}
 function update(dt){P.time+=dt;rageUpd(dt);hpdUpd(dt);odinUpd(dt);
  const st=STAGES[G.stage],seg=st.seq[G.seqI];
  if(!seg){if(ens.every(e=>e.hp<=0)){stageClear()}}
@@ -636,7 +636,7 @@ function lvlBar(){if(!P)return;if(!LB.pr){LB.pr=document.createElement('div');LB
  cx.fillStyle=LB.fl>0?'#e8f4ff':'#f0e1be';cx.font=`bold ${P.lvl>99?10:P.lvl>9?12:15}px Georgia`;cx.textAlign='center';cx.textBaseline='middle';cx.fillText(P.lvl,0,1);cx.restore();cx.restore();cx.textBaseline='alphabetic'}
 function bar(x,y,w,h,f,c,bg='#200'){cx.fillStyle='#000a';cx.fillRect(x-1,y-1,w+2,h+2);cx.fillStyle=bg;cx.fillRect(x,y,w,h);cx.fillStyle=c;cx.fillRect(x,y,w*cl(f,0,1),h)}
 function hud(){const top=8+(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat'))||0),w=Math.min(180,W*.42);
- bar(10,top,w,10,P.hp/P.max,'#b3121b');bar(10,top+14,w,6,P.energy/100,P.energy>=100?'#bfe0ff':'#4a7ad0','#0a1020');{const pt=performance.now()/1000;let f,c;if(P.rage>0){f=P.rage/20;c=P.rage<3&&Math.sin(pt*30)>0?'#ffd0a0':'#ff7a10'}else if(G.rgReady){f=1;const k=.5+.5*Math.sin(pt*6);c=`rgb(255,${140+k*80|0},${30+k*60|0})`;cx.save();cx.shadowColor='#ff9020';cx.shadowBlur=6+k*8;bar(10,top+23,w,6,1,c,'#2a1404');cx.restore()}else{f=(G.rgT||0)/90;c='#c85a0a'}bar(10,top+23,w,6,f,c,'#2a1404')}
+ bar(10,top,w,10,P.hp/P.max,'#b3121b');bar(10,top+14,w,6,P.energy/100,P.energy>=100?'#bfe0ff':'#4a7ad0','#0a1020');{const pt=performance.now()/1000;let f,c;if(P.rage>0){f=P.rage/20;c=P.rage<3&&Math.sin(pt*30)>0?'#ffd0a0':'#ff7a10'}else if(G.rgReady){f=1;const k=.5+.5*Math.sin(pt*6);c=`rgb(255,${140+k*80|0},${30+k*60|0})`;cx.save();cx.shadowColor='#ff9020';cx.shadowBlur=6+k*8;bar(10,top+23,w,6,1,c,'#2a1404');cx.restore()}else{f=(G.rgT||0)*1.3/90;c='#c85a0a'}bar(10,top+23,w,6,f,c,'#2a1404')}
  cx.font='bold 12px Georgia';cx.textAlign='left';cx.fillStyle='#e8dcc8';cx.fillText(`Lv ${P.lvl}  \u2694 ${P.kills}  \u25CF ${P.gold}g  ${fmt(P.time)}`,10,top+49);
  cx.fillStyle='#c9a96e';{const sg=STAGES[G.stage].seq[G.seqI];cx.fillText(STAGES[G.stage].n+(sg?' \u00b7 Wave '+(G.seqI+1)+'/10':''),10,top+64);if(sg&&sg.w){const kw=cx.measureText(STAGES[G.stage].n+' \u00b7 Wave '+(G.seqI+1)+'/10  ').width;cx.fillStyle='#e8dcc8';cx.fillText('Kills '+Math.min(G.wK||0,sg.q)+'/'+sg.q,10+kw,top+64)}}
  {const lx=10+w+8;for(let i=0;i<5;i++){const x=lx+i*12,y=top+5,on=i<(P.lives||0);cx.fillStyle=on?'#e8303a':'rgba(255,255,255,.18)';cx.beginPath();cx.moveTo(x,y+4);cx.bezierCurveTo(x-6,y-1,x-3,y-5,x,y-2);cx.bezierCurveTo(x+3,y-5,x+6,y-1,x,y+4);cx.fill()}}
