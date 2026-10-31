@@ -13,7 +13,7 @@ p{margin:.3em 0;opacity:.9;font-size:15px}
 button{font-family:inherit;font-size:17px;background:#1b2433;color:#e8dcc8;border:2px solid #4a6a96;border-radius:8px;padding:10px 22px;margin:6px;min-width:170px}
 button:active{background:#2c3e5c}
 button.red{border-color:#b3121b;background:#2a0d10}
-#intro{position:fixed;inset:0;background:#000;z-index:50}#intro video{width:100%;height:100%;object-fit:contain;display:block}#iskip{position:absolute;right:calc(16px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));min-width:0;padding:8px 16px;font-size:15px;background:rgba(10,12,18,.6);color:#eee;border:1px solid #fff4;border-radius:20px;z-index:2}#title{background:#05060a}#title>*{position:relative;z-index:2}#title>#tv,#title>#tshade{position:absolute;inset:0;width:100%;height:100%;z-index:0}#tv{object-fit:cover;display:none}#title.vid #tv{display:block}#tshade{background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85));display:none}#title.vid #tshade{display:block}#title.vid h1{visibility:hidden}#title.vid{justify-content:flex-end;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+#intro{position:fixed;inset:0;background:#000;z-index:50}#intro video{width:100%;height:100%;object-fit:contain;display:block}#iskip{position:absolute;right:calc(16px + env(safe-area-inset-right));bottom:calc(24px + env(safe-area-inset-bottom));min-width:0;padding:8px 16px;font-size:15px;background:rgba(10,12,18,.6);color:#eee;border:1px solid #fff4;border-radius:20px;z-index:2}#gate{position:fixed;inset:0;z-index:60;background:#000 url(title.jpg) center/cover;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .6s;-webkit-tap-highlight-color:transparent}#gate::before{content:'';position:absolute;inset:0;background:rgba(3,4,8,.72)}#gate.out{opacity:0;pointer-events:none}.gin{position:relative;color:#e8dcc8;font:bold 22px Georgia,serif;letter-spacing:6px;text-shadow:0 0 12px #b3121b;animation:gp 1.6s ease-in-out infinite}.gr{color:#c9a96e;font-size:26px;letter-spacing:0;margin:0 10px}@keyframes gp{0%,100%{opacity:.45}50%{opacity:1}}#title{background:#05060a}#title>*{position:relative;z-index:2}#title>#tv,#title>#tshade{position:absolute;inset:0;width:100%;height:100%;z-index:0}#tv{object-fit:cover;display:none}#title.vid #tv{display:block}#tshade{background:linear-gradient(rgba(0,0,0,.15),rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85));display:none}#title.vid #tshade{display:block}#title.vid h1{visibility:hidden}#title.vid{justify-content:flex-end;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
 #tsnd{position:absolute!important;top:calc(10px + env(safe-area-inset-top));right:10px;min-width:0;width:44px;height:44px;padding:0;font-size:20px;display:none;background:rgba(10,12,18,.6)}#title.vid #tsnd{display:block}
 #raven{position:absolute;top:15%;height:30%;left:20%;width:60%;cursor:default;-webkit-tap-highlight-color:transparent;z-index:1}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;max-width:620px;width:100%}
@@ -37,7 +37,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
  <div id="bA" class="btn">ATTACK</div>
  <div id="bD" class="btn">DASH</div><div id="thor" class="btn">THOR</div>
 </div>
-<div id="title" class="ov on"><video id="tv" playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F50A;</button>
+<div id="gate"><div class="gin"><span class="gr">&#x16B1;</span> TAP TO ENTER <span class="gr">&#x16B1;</span></div></div><div id="title" class="ov on"><video id="tv" playsinline autoplay loop preload="metadata" poster="title.jpg" src="title.mp4"></video><div id="tshade"></div><button id="tsnd" aria-label="sound">&#x1F50A;</button>
  <div id="raven" aria-hidden="true"></div>
  <h1>BERSERKER</h1>
  <p id="best" style="display:none"></p>
@@ -583,14 +583,15 @@ tv.addEventListener('error',()=>{tvOk=false;$('title').classList.remove('vid')})
 $('tsnd').onclick=e=>{e.stopPropagation();tv.muted=!tv.muted;localStorage.setItem('berserker_tvmute',tv.muted?'1':'0');$('tsnd').innerHTML=tv.muted?'&#x1F507;':'&#x1F50A;';if(!tv.muted)tv.play().catch(()=>{})};
 $('mute').textContent='Music: '+(musOn?'ON':'OFF');
 const tvWantSnd=localStorage.getItem('berserker_tvmute')!=='1';const tsI=()=>{$('tsnd').innerHTML=tv.muted?'&#x1F507;':'&#x1F50A;'};
-let tvPend=false;
-function tvStart(){tv.muted=!tvWantSnd;tsI();const pr=tv.play();if(pr&&pr.catch)pr.catch(()=>{if(!tvWantSnd)return;tv.muted=true;tv.play().catch(()=>{});tvPend=true;$('tsnd').innerHTML='&#x1F50A;'})}
-let swallow=false;
-function firstGesture(e){if(!tvPend)return;tvPend=false;if(tv.getAttribute('src')){tv.muted=false;tv.play().catch(()=>{});tsI()}
- const t=e.target;if(!(t&&t.id==='play')){swallow=true;e.stopPropagation();setTimeout(()=>swallow=false,700)}}
-['pointerdown','touchstart','keydown'].forEach(n=>window.addEventListener(n,firstGesture,{capture:true}));
-window.addEventListener('click',e=>{if(swallow){swallow=false;e.stopPropagation();e.preventDefault()}},{capture:true});
-tvStart();
+// tap-to-enter gate: audio unlock happens synchronously inside a click (user activation)
+tv.muted=true;tv.play().catch(()=>{});tsI();
+const gate=$('gate');let gateDone=0;
+function enterGate(e){if(gateDone)return;gateDone=1;e.stopPropagation();e.preventDefault();
+ tv.muted=!tvWantSnd;try{tv.currentTime=0}catch(_){}const pr=tv.play();if(pr&&pr.catch)pr.catch(()=>{tv.muted=true;tv.play().catch(()=>{});tsI()});tsI();
+ initAudio();if(AC&&AC.state!='running')AC.resume().catch(()=>{});
+ gate.classList.add('out');setTimeout(()=>gate.remove(),650)}
+gate.addEventListener('click',enterGate);gate.addEventListener('pointerdown',e=>e.stopPropagation());
+addEventListener('keydown',e=>{if(!gateDone&&(e.key=='Enter'||e.key==' '))enterGate(e)},{capture:true});
 let introDone=0;
 function playIntro(cb){const w=document.createElement('div');w.id='intro';const v=document.createElement('video');v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.muted=!tvWantSnd;v.src='intro.mp4';
  const sk=document.createElement('button');sk.id='iskip';sk.textContent='Skip \u203a';w.append(v,sk);document.body.append(w);let done=0,lt=-1,st=performance.now();
