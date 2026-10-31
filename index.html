@@ -46,7 +46,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <div id="cheat" class="ov"><h2>Raven's Secrets</h2>
  <button id="cInv">Invincibility: OFF</button><button id="cFF">Fast Forward: OFF</button><button id="cBoss">Skip to Boss: OFF</button>
  <button id="cBack">Back</button></div>
-<div id="pause" class="ov"><h2>Paused</h2><button id="resume">Resume</button><button id="mute">Music: ON</button><button id="sfx">Sound FX: ON</button><button class="red" id="quit">Quit to Title</button></div>
+<div id="pause" class="ov"><h2>Paused</h2><p id="credits" style="position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;margin:0 12px;font-size:11px;opacity:.6">Credits &middot; Music: 'Varyag War Drum' by Tausdei (Tausdei Music), CC-BY 3.0, via OpenGameArt.org</p><button id="resume">Resume</button><button id="mute">Music: ON</button><button id="sfx">Sound FX: ON</button><button class="red" id="quit">Quit to Title</button></div>
 <div id="shop" class="ov"><h2>The Market</h2><p id="gold"></p><p style="font-size:13px">Blessings</p><div class="grid" id="bless"></div><p style="font-size:13px">Weapons</p><div class="grid" id="weap"></div><button class="red" id="next">Onward</button></div>
 <div id="dead" class="ov"><h1 style="font-size:clamp(34px,10vw,64px)">YOU HAVE FALLEN</h1><p id="dstat"></p><button class="red" id="again">Rise Again</button><button id="dtitle">Title</button></div>
 <div id="win" class="ov"><h1 style="color:#c9a96e;font-size:clamp(34px,11vw,72px)">VALHALLA</h1><p>The Beast is slain. The halls of Odin open for you.</p><p id="wstat"></p><button class="red" id="wtitle">Title</button></div>
@@ -95,7 +95,17 @@ function bakeAxe(){if(!AC||AXB)return;const sr=AC.sampleRate,mk=(d,fn)=>{const n
 function axeSnd(part,v){if(!AC||!sfxOn)return;if(!AXB)bakeAxe();const s=AC.createBufferSource(),g=AC.createGain();s.buffer=AXB[v|0][part];s.playbackRate.value=.96+Math.random()*.08;g.gain.value=part?.45:.3;s.connect(g);g.connect(sfxG);s.start()}
 const S={thunder(){noise(.12,.9,5000);noise(1.1,.6,320);tone(70,.7,'sawtooth',.25,28)},swing(){noise(.12,.25,2500)},hit(){noise(.1,.4,900);tone(140,.1,'square',.15,60)},heavy(){noise(.25,.5,600);tone(90,.25,'sawtooth',.25,40)},hurt(){tone(220,.2,'sawtooth',.25,80)},block(){tone(900,.08,'square',.12,500);noise(.05,.2,4000)},dash(){noise(.15,.2,3000)},coin(){tone(1200,.08,'triangle',.12,1800)},lvl(){[440,554,660,880].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.18),i*80))},thor(){noise(.8,.7,3000);tone(60,.8,'sawtooth',.35,30)},roar(){tone(110,.9,'sawtooth',.3,50);noise(.9,.3,500)},die(){tone(70,.3,'square',.2,40)}};
 let musT=0,step=0,musTimer=null;
-function music(on){if(musTimer){clearInterval(musTimer);musTimer=null}if(!on||!AC)return;musT=AC.currentTime+.1;
+// ---------- streamed stage music (Village) ----------
+let VM=null,VMfail=0,VMfi=null;const VMV=.55;
+function vmFade(to,d){if(!VM)return;clearInterval(VMfi);const a=VM,f0=a.volume,t0=performance.now();VMfi=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/(d*1000));a.volume=Math.max(0,Math.min(1,f0+(to-f0)*k));if(k>=1){clearInterval(VMfi);if(to==0&&a._kill){a.pause();a.removeAttribute('src');a.load()}}},50)}
+function vmStop(){if(!VM)return;VM._kill=1;vmFade(0,.8);VM=null}
+function stageMusic(i){vmStop();if(i!==0||VMfail){music(true);return}
+ const a=new Audio();VM=a;a.loop=true;a.preload='auto';a.volume=0;
+ const fb=()=>{if(a._kill)return;VMfail=1;if(VM===a){VM=null;a._kill=1;if(G.state=='play'||G.state=='intro'||G.state=='pause')music(true)}};
+ a.onerror=fb;a.src='music_village.m4a';
+ const go=()=>{if(VM!==a)return;if(!musOn||G.state=='pause'||document.hidden)return;a.play().then(()=>vmFade(VMV,1.6)).catch(fb)};
+ setTimeout(go,1200)}
+function music(on){if(musTimer){clearInterval(musTimer);musTimer=null}if(!on){vmStop()}if(!on||!AC)return;musT=AC.currentTime+.1;
  musTimer=setInterval(()=>{if(!musOn||!AC)return;while(musT<AC.currentTime+.3){const s=step%32,bass=[55,55,65.4,49][Math.floor(step/32)%4];
   if(s%8==0||s%8==3)noise(.25,.5,180,musG,musT);if(s%8==4)noise(.1,.18,2500,musG,musT);
   if(s%4==0){const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=bass;g.gain.setValueAtTime(.12,musT);g.gain.exponentialRampToValueAtTime(.001,musT+.5);o.connect(g);g.connect(musG);o.start(musT);o.stop(musT+.55)}
@@ -144,7 +154,7 @@ function startStage(i){pax=[];dead=[];tgt=null;walkId=null;marks=[];G.stage=i;se
  if(i==0){b.strokeStyle='#2c261c';b.lineWidth=18;b.beginPath();b.moveTo(0,WS/4);b.bezierCurveTo(200,200,400,420,WS/2,300);b.stroke()}
  if(i==1){for(let k=0;k<30;k++){b.fillStyle='rgba(40,70,120,.08)';b.beginPath();b.arc(rnd()*WS/2,rnd()*WS/2,10+rnd()*40,0,7);b.fill()}}
  if(i==2){for(let k=0;k<300;k++){b.strokeStyle='#22301f';b.beginPath();const x=rnd()*WS/2,y=rnd()*WS/2;b.moveTo(x,y);b.lineTo(x+2,y-5);b.stroke()}}
- G.state='play';G.warp=1.2;G.wHit=0;G.scorch=null;banner(st.n,st.sub);showUI(true);music(true);
+ G.state='play';G.warp=1.2;G.wHit=0;G.scorch=null;banner(st.n,st.sub);showUI(true);stageMusic(i);
  if(cheat.boss)G.seqI=STAGES[i].seq.findIndex(s=>s.b);}
 let banT;function banner(a,b){const e=$('banner');e.innerHTML=a+(b?'<small>'+b+'</small>':'');e.style.opacity=1;clearTimeout(banT);banT=setTimeout(()=>e.style.opacity=0,2600)}
 // ---------- spawning ----------
@@ -289,7 +299,7 @@ function collideObs(o){for(const b of obs){const dx=o.x-b.x,dy=o.y-b.y,d=Math.hy
 function camFollow(dt){const vw=W/SC,vh=H/SC;cam.x+=(P.x-cam.x)*Math.min(1,dt*8);cam.y+=(P.y-cam.y)*Math.min(1,dt*8);cam.x=cl(cam.x,vw/2,Math.max(vw/2,WS-vw/2));cam.y=cl(cam.y,vh/2,Math.max(vh/2,WS-vh/2))}
 function fx(dt){for(const p of parts){p.l-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.9;p.vy*=.9}parts=parts.filter(p=>p.l>0);if(parts.length>500)parts.splice(0,parts.length-500);
  for(const n of nums){n.l-=dt;n.y-=40*dt}nums=nums.filter(n=>n.l>0);for(const b of bolts)b.l-=dt;for(const k of marks)k.l-=dt*1.4;marks=marks.filter(k=>k.l>0);bolts=bolts.filter(b=>b.l>0);shake*=Math.pow(.004,dt);if(G.flash)G.flash-=dt}
-function stageClear(){if(G.state!='play')return;recordSave();if(G.stage>=2){G.state='win';showUI(false);music(false);$('wstat').textContent=`ETM \u00b7 ${P.kills} kills \u00b7 ${fmt(P.time)} \u00b7 Level ${P.lvl}`;ov('win');return}
+function stageClear(){if(G.state!='play')return;recordSave();vmStop();if(G.stage>=2){G.state='win';showUI(false);music(false);$('wstat').textContent=`ETM \u00b7 ${P.kills} kills \u00b7 ${fmt(P.time)} \u00b7 Level ${P.lvl}`;ov('win');return}
  G.state='clear';banner(STAGES[G.stage].n+' cleared','The market awaits');setTimeout(()=>{openShop()},1800)}
 // ---------- shop ----------
 function openShop(){G.state='shop';showUI(false);ov('shop');renderShop()}
@@ -563,10 +573,10 @@ function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;
   if(hitstop>0){hitstop-=dt;fx(dt*.2)}else{if(G.state=='intro'){G.introT-=dt;camFollow(dt);if(G.introT<=0)G.state='play'}else if(G.state=='clear'){camFollow(dt);for(const c of coins){c.x+=(P.x-c.x)*dt*5;c.y+=(P.y-c.y)*dt*5;if(dist(c,P)<10&&!c.got){c.got=1;P.gold+=c.v}}coins=coins.filter(c=>!c.got)}else if(G.warp>0){warpUpd(dt);camFollow(dt)}else update(dt);fx(dt)}}
  draw();requestAnimationFrame(loop)}
 // ---------- menus ----------
-function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pause')}else if(G.state=='pause'){G.state='play';ov(null);showUI(true)}}
+function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pause');if(VM)VM.pause()}else if(G.state=='pause'){G.state='play';ov(null);showUI(true);if(VM&&musOn)VM.play().catch(()=>{})}}
 $('play').onclick=()=>{initAudio();stopTV();ov(null);if(!introDone){introDone=1;playIntro(newRun)}else newRun()};$('again').onclick=()=>{ov(null);newRun()};
 const toTitle=()=>{G.state='title';P=null;showUI(false);music(false);showBest();ov('title');startTV()};$('dtitle').onclick=$('wtitle').onclick=$('quit').onclick=toTitle;
-$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF')};
+$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(VM){vmFade(musOn?VMV:0,.4);if(musOn&&G.state=='play')VM.play().catch(()=>{})}if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF')};
 $('sfx').onclick=()=>{sfxOn=!sfxOn;$('sfx').textContent='Sound FX: '+(sfxOn?'ON':'OFF')};
 const tv=$('tv');let tvOk=true;$('title').classList.add('vid');
 tv.addEventListener('error',()=>{tvOk=false;$('title').classList.remove('vid')});
@@ -593,7 +603,7 @@ function startTV(){if(!tvOk)return;tv.src='title.mp4';tv.play().catch(()=>{})}
 let rav=0,ravT=0;$('raven').onclick=()=>{const n=performance.now();if(n-ravT>1500)rav=0;ravT=n;rav++;tone(600+rav*100,.08,'triangle',.1);if(rav>=5){rav=0;ov('cheat')}};
 const cupd=()=>{$('cInv').textContent='Invincibility: '+(cheat.inv?'ON':'OFF');$('cFF').textContent='Fast Forward: '+(cheat.ff?'ON':'OFF');$('cBoss').textContent='Skip to Boss: '+(cheat.boss?'ON':'OFF')};
 $('cInv').onclick=()=>{cheat.inv=!cheat.inv;cupd()};$('cFF').onclick=()=>{cheat.ff=!cheat.ff;cupd()};$('cBoss').onclick=()=>{cheat.boss=!cheat.boss;cupd()};$('cBack').onclick=()=>ov('title');
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.state=='play')togglePause()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(G.state=='play')togglePause();if(VM)VM.pause()}else if(VM&&musOn&&(G.state=='play'||G.state=='intro'))VM.play().catch(()=>{})});
 window.__B={draw:()=>draw(),G:()=>G,P:()=>P,ens:()=>ens,cheat,openShop,renderShop,tgt:()=>tgt,cam:()=>cam};
 resize();bakeAll();showBest();requestAnimationFrame(loop);
 </script></body></html>
