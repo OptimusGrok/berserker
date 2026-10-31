@@ -97,7 +97,7 @@ function stageMusic(i){vmStop();if(i!==0||VMfail){music(true);return}
  const fb=()=>{if(a._kill)return;VMfail=1;if(VM===a){VM=null;a._kill=1;if(G.state=='play'||G.state=='intro'||G.state=='pause')music(true)}};
  a.onerror=fb;a.src='music_village.m4a';
  const go=()=>{if(VM!==a)return;if(!musOn||G.state=='pause'||document.hidden)return;a.play().then(()=>vmFade(VMV,1.6)).catch(fb)};
- setTimeout(go,1200)}
+ setTimeout(go,1800)}
 function music(on){if(musTimer){clearInterval(musTimer);musTimer=null}if(!on){vmStop()}if(!on||!AC)return;musT=AC.currentTime+.1;
  musTimer=setInterval(()=>{if(!musOn||!AC)return;while(musT<AC.currentTime+.3){const s=step%32,bass=[55,55,65.4,49][Math.floor(step/32)%4];
   if(s%8==0||s%8==3)noise(.25,.5,180,musG,musT);if(s%8==4)noise(.1,.18,2500,musG,musT);
@@ -310,7 +310,7 @@ function startStage(i){pax=[];dead=[];tgt=null;walkId=null;marks=[];G.stage=i;se
  if(i==0){b.strokeStyle='#2c261c';b.lineWidth=18;b.beginPath();b.moveTo(0,WS/4);b.bezierCurveTo(200,200,400,420,WS/2,300);b.stroke()}
  if(i==1){for(let k=0;k<30;k++){b.fillStyle='rgba(40,70,120,.08)';b.beginPath();b.arc(rnd()*WS/2,rnd()*WS/2,10+rnd()*40,0,7);b.fill()}}
  if(i==2){for(let k=0;k<300;k++){b.strokeStyle='#22301f';b.beginPath();const x=rnd()*WS/2,y=rnd()*WS/2;b.moveTo(x,y);b.lineTo(x+2,y-5);b.stroke()}}
- G.state='play';G.warp=1.2;G.wHit=0;G.scorch=null;banner(st.n,st.sub);showUI(true);stageMusic(i);
+ P.vx=P.vy=0;P.flip=0;G.state='play';G.warp=1.8;G.wHit=0;G.scorch=null;banner(st.n,st.sub);showUI(true);stageMusic(i);
  if(cheat.boss)G.seqI=STAGES[i].seq.findIndex(s=>s.b);}
 let banT;function banner(a,b){const e=$('banner');e.innerHTML=a+(b?'<small>'+b+'</small>':'');e.style.opacity=1;clearTimeout(banT);banT=setTimeout(()=>e.style.opacity=0,2600)}
 // ---------- spawning ----------
@@ -325,7 +325,7 @@ addEventListener('keyup',e=>K[e.code]=0);
 function setTgt(e,mark){if(!P)return;tgt={x:cl(cam.x+(e.clientX-W/2)/SC,P.r,WS-P.r),y:cl(cam.y+(e.clientY-H/2)/SC,P.r,WS-P.r)};stuckT=0;if(mark||!marks.length||marks[marks.length-1].l<.75)marks.push({x:tgt.x,y:tgt.y,l:1});if(marks.length>8)marks.shift()}
 const J={x:0,y:0,id:null};
 (function(){const jo=$('joy'),jk=$('jk'),c=$('jc').getContext('2d'),im=new Image();im.onload=()=>{const sc=270/im.height,w=im.width*sc,hx=68.5*sc;for(const r of[Math.PI/2,0]){c.save();c.translate(140,140);c.rotate(r);c.drawImage(im,-hx,-135,w,270);c.restore()}};im.src='axe.webp';
- const set=e=>{const b=jo.getBoundingClientRect(),R=b.width/2,dx=e.clientX-b.left-R,dy=e.clientY-b.top-R,d=Math.hypot(dx,dy),mr=R*.62,k=d>mr?mr/d:1;jk.style.transform=`translate(${dx*k}px,${dy*k}px)`;let m=Math.min(d/mr,1);const dz=.18;m=m<dz?0:(m-dz)/(1-dz);J.x=d?dx/d*m:0;J.y=d?dy/d*m:0};
+ const set=e=>{const b=jo.getBoundingClientRect(),R=b.width/2,dx=e.clientX-b.left-R,dy=e.clientY-b.top-R,d=Math.hypot(dx,dy),mr=R*.62,k=d>mr?mr/d:1;jk.style.transform=`translate(${dx*k}px,${dy*k}px)`;let m=Math.min(d/mr,1);const dz=.18;m=m<dz?0:(m-dz)/(1-dz);m=Math.pow(m,1.6);J.x=d?dx/d*m:0;J.y=d?dy/d*m:0};
  jo.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();if(J.id!=null)return;J.id=e.pointerId;jo.setPointerCapture&&jo.setPointerCapture(e.pointerId);set(e)});
  jo.addEventListener('pointermove',e=>{if(e.pointerId===J.id)set(e)});
  const end=e=>{if(e.pointerId!==J.id)return;J.id=null;J.x=J.y=0;jk.style.transform=''};['pointerup','pointercancel','lostpointercapture'].forEach(t=>jo.addEventListener(t,end));
@@ -333,7 +333,7 @@ const J={x:0,y:0,id:null};
 const ptrs=new Map();let pinch=null;const pd=()=>{const [a,b]=[...ptrs.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1};
 cv.addEventListener('pointerdown',e=>{initAudio();if(e.target!==cv)return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(ptrs.size>=2){if(walkId!=null){walkId=null;tgt=null}if(ptrs.size==2)pinch={d:pd(),z:Z};return}
- if(G.state=='play'&&G.warp>0){skipWarp();return}});
+ if(G.state=='play'&&G.warp>0){if(G.warp<=.8)skipWarp();return}});
 cv.addEventListener('pointermove',e=>{if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pinch&&ptrs.size>=2){setZoom(pinch.z*pd()/pinch.d);return}});
 ['pointerup','pointercancel'].forEach(t=>addEventListener(t,e=>{ptrs.delete(e.pointerId);if(ptrs.size<2&&pinch&&!ptrs.size)pinch=null;if(e.pointerId===walkId)walkId=null}));
 function bindBtn(id,k){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();initAudio();BT[k]=1;BTL[k]=1;el.classList.add('dn');el.setPointerCapture&&el.setPointerCapture(e.pointerId)});
@@ -449,10 +449,11 @@ function update(dt){P.time+=dt;rageUpd(dt);
  pax=pax.filter(t=>t.l>0);
  const spd=P.spd*(1+P.b.swift*.1)*(P.blocking?.4:1)*(P.atkT>0?.45:1)*(P.slowT>0?.55:1);
  const px0=P.x,py0=P.y;if(P.dashT>0){P.x+=Math.cos(P.dashA)*520*dt;P.y+=Math.sin(P.dashA)*520*dt;P.dashT-=dt;if(R()<.6)parts.push({x:P.x,y:P.y,vx:0,vy:0,l:.25,c:'rgba(127,180,255,.5)',s:9})}
- else{P.x+=mx*spd*dt;P.y+=my*spd*dt}
+ else{const tx=mx*spd,ty=my*spd,dot=tx*P.vx+ty*P.vy,acc=(tx||ty)&&dot>=0,k=1-Math.exp(-dt/(acc?.04:.032));P.vx+=(tx-P.vx)*k;P.vy+=(ty-P.vy)*k;if(!tx&&!ty&&Math.hypot(P.vx,P.vy)<3)P.vx=P.vy=0;P.x+=P.vx*dt;P.y+=P.vy*dt}
+ if(P.dashT>0){P.vx=Math.cos(P.dashA)*spd*Math.max(m,.6);P.vy=Math.sin(P.dashA)*spd*Math.max(m,.6)}
  if(P.atkT>0){const w=WEAPONS[P.weapon],full=P.isHeavy?w.spd*2.2:w.spd;P.atkT-=dt;if(!P.hitDone&&P.atkT<full*.5){P.hitDone=true;resolveSwing()}}
  P.atkCd-=dt;P.comboT-=dt;P.dashCd-=dt;P.inv-=dt;P.hurtT-=dt;P.slowT-=dt;
- {const ox=P.x,oy=P.y;collideObs(P);if(tgt&&P.dashT<=0&&m>.3){const want=spd*dt*m,got=Math.hypot(P.x-px0,P.y-py0);stuckT=got<want*.25?stuckT+dt:0;if(stuckT>.3&&walkId==null)tgt=null}}P.x=cl(P.x,P.r,WS-P.r);P.y=cl(P.y,P.r,WS-P.r);
+ {const ox=P.x,oy=P.y;collideObs(P);for(const b of obs){const dx=P.x-b.x,dy=P.y-b.y,dd=Math.hypot(dx,dy)||1;if(dd<P.r+b.r+.5){const nx=dx/dd,ny=dy/dd,vd=P.vx*nx+P.vy*ny;if(vd<0){P.vx-=vd*nx;P.vy-=vd*ny}}}if(P.x<=P.r&&P.vx<0||P.x>=WS-P.r&&P.vx>0)P.vx=0;if(P.y<=P.r&&P.vy<0||P.y>=WS-P.r&&P.vy>0)P.vy=0;if(tgt&&P.dashT<=0&&m>.3){const want=spd*dt*m,got=Math.hypot(P.x-px0,P.y-py0);stuckT=got<want*.25?stuckT+dt:0;if(stuckT>.3&&walkId==null)tgt=null}}P.x=cl(P.x,P.r,WS-P.r);P.y=cl(P.y,P.r,WS-P.r);
  for(const e of ens)if(e.hp>0){updEnemy(e,dt);if(e.type!='boss')collideObs(e,1);e.x=cl(e.x,e.r,WS-e.r);e.y=cl(e.y,e.r,WS-e.r)}
  for(let i=0;i<ens.length;i++){const a=ens[i];if(a.hp<=0)continue;for(let j=i+1;j<ens.length;j++){const b=ens[j];if(b.hp<=0)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,o=a.r+b.r-d;if(o>0){const s=o/d*.5;a.x-=dx*s;a.y-=dy*s;b.x+=dx*s;b.y+=dy*s}}}
  ens=ens.filter(e=>e.hp>0);
@@ -464,7 +465,7 @@ function update(dt){P.time+=dt;rageUpd(dt);
  camFollow(dt)}
 function nearest(){let b=null,bd=1e9;for(const e of ens){const d=dist(e,P);if(e.hp>0&&d<bd){bd=d;b=e}}return b}
 function collideObs(o,ne){for(const b of obs){if(ne&&b.f)continue;const dx=o.x-b.x,dy=o.y-b.y,d=Math.hypot(dx,dy)||1,m=o.r+b.r;if(d<m){o.x=b.x+dx/d*m;o.y=b.y+dy/d*m}}}
-function camFollow(dt){const vw=W/SC,vh=H/SC;cam.x+=(P.x-cam.x)*Math.min(1,dt*8);cam.y+=(P.y-cam.y)*Math.min(1,dt*8);cam.x=cl(cam.x,vw/2,Math.max(vw/2,WS-vw/2));cam.y=cl(cam.y,vh/2,Math.max(vh/2,WS-vh/2))}
+function camFollow(dt){const vw=W/SC,vh=H/SC,ck=1-Math.exp(-dt*9);cam.x+=(P.x-cam.x)*ck;cam.y+=(P.y-cam.y)*ck;cam.x=cl(cam.x,vw/2,Math.max(vw/2,WS-vw/2));cam.y=cl(cam.y,vh/2,Math.max(vh/2,WS-vh/2))}
 function fx(dt){for(const p of parts){p.l-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.9;p.vy*=.9}parts=parts.filter(p=>p.l>0);if(parts.length>500)parts.splice(0,parts.length-500);
  for(const n of nums){n.l-=dt;n.y-=40*dt}nums=nums.filter(n=>n.l>0);for(const b of bolts)b.l-=dt;for(const k of marks)k.l-=dt*1.4;marks=marks.filter(k=>k.l>0);bolts=bolts.filter(b=>b.l>0);shake*=Math.pow(.004,dt);if(G.flash)G.flash-=dt}
 function stageClear(){if(G.state!='play')return;recordSave();vmStop();if(G.stage>=2){G.state='win';showUI(false);music(false);$('wstat').textContent=`ETM \u00b7 ${P.kills} kills \u00b7 ${fmt(P.time)} \u00b7 Level ${P.lvl}`;ov('win');return}
@@ -492,7 +493,7 @@ function draw(){const t=performance.now()/1000;cx.setTransform(DPR,0,0,DPR,0,0);
  for(const b of bolts){cx.strokeStyle='#cfe6ff';cx.lineWidth=3;cx.shadowColor='#7fb4ff';cx.shadowBlur=12;cx.beginPath();let x=b.x,y=b.y-260;cx.moveTo(x,y);while(y<b.y){y+=26;x=b.x+(R()-.5)*30*(1-(y-b.y+260)/260+.3);cx.lineTo(x,Math.min(y,b.y))}cx.stroke();cx.shadowBlur=0}
  if(G.stage==0&&V)vDrawTop(t);drawRageFx(t);if(G.warp>0)drawWarp(t);cx.textAlign='center';for(const n of nums){cx.globalAlpha=Math.min(1,n.l*2);cx.font=`bold ${Math.round(12*n.s)}px Georgia`;cx.fillStyle='#000';cx.fillText(n.v,n.x+1,n.y+1);cx.fillStyle=n.c;cx.fillText(n.v,n.x,n.y)}cx.globalAlpha=1;
  cx.setTransform(DPR,0,0,DPR,0,0);
- if(G.warp>.8){cx.fillStyle=`rgba(4,6,14,${Math.min(.55,(1.2-G.warp)*1.4)})`;cx.fillRect(0,0,W,H)}
+ if(G.warp>.8){cx.fillStyle=`rgba(4,6,14,${cl((1.8-G.warp)*.55,0,.55)})`;cx.fillRect(0,0,W,H)}
  // vignette + storm tint
  const g=cx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,G.stage==1?'rgba(0,0,10,.8)':'rgba(10,0,0,.65)');cx.fillStyle=g;cx.fillRect(0,0,W,H);
  if(P.hurtT>0){cx.fillStyle=`rgba(150,0,0,${P.hurtT})`;cx.fillRect(0,0,W,H)}if(G.flash>0){cx.fillStyle=`rgba(200,225,255,${G.flash*1.5})`;cx.fillRect(0,0,W,H)}
@@ -703,9 +704,9 @@ function drawDead(dt){for(const d of dead){d.t+=dt;const s=d.s,p=Math.min(1,d.t/
  else{const n=6,sh=s.h/n;for(let i=0;i<n;i++){const q=Math.sin(d.sd+i*12.9),ty=top+i*sh,drop=Math.max(0,-(ty+sh)-(n-1-i)*sh*.22)*Math.min(1,d.t*2.5)**2;cx.save();cx.translate(q*p*9*(1+i*.3),ty+sh/2+drop);cx.rotate(q*p*.9);cx.drawImage(s.c,0,i*sh*RES,s.c.width,sh*RES,-s.ox,-sh/2,s.w,sh);cx.restore()}}
  cx.restore()}dead=dead.filter(d=>d.t<1.7)}
 function drawRageFx(t){if(!(P&&P.rage>0))return;const a=(P.rage<3?.5+.5*Math.sin(t*28):1)*Math.min(1,(20-P.rage)*4);for(let i=0;i<4;i++){const q=t*2.6+i*Math.PI/2,r=17+Math.sin(t*3+i)*2;cx.fillStyle=`rgba(255,${60+i*25},30,${.8*a})`;cx.beginPath();cx.arc(P.x+Math.cos(q)*r,P.y-4+Math.sin(q)*r*.5,1.8,0,7);cx.fill()}}
-function drawPlayer(t){const x=P.x,y=P.y,f=P.face,w=WEAPONS[P.weapon];const mv=Math.hypot(x-(P.lx??x),y-(P.ly??y));P.lx=x;P.ly=y;P.wph=(P.wph||0)+mv*.09;
+function drawPlayer(t){const x=P.x,y=P.y,f=P.face,w=WEAPONS[P.weapon];const mv=Math.hypot(x-(P.lx??x),y-(P.ly??y));P.lx=x;P.ly=y;P.wph=(P.wph||0)+Math.min(mv,12)*.09;const vsp=Math.hypot(P.vx||0,P.vy||0);{const c=Math.cos(f);if(c<-.2)P.flip=1;else if(c>.2)P.flip=0}
  cx.save();if(P.inv>0&&Math.floor(t*20)%2&&!cheat.inv)cx.globalAlpha=.5;cx.fillStyle='rgba(0,0,0,.45)';cx.beginPath();cx.ellipse(x,y+11,13,4.5,0,0,7);cx.fill();
- const flip=Math.cos(f)<0,fr=mv>.2?Math.floor(P.wph)%4:0;
+ const flip=!!P.flip,fr=vsp>14||P.dashT>0?Math.floor(P.wph)%4:0;
  let wa=f;if(P.atkT>0){const full=P.isHeavy?w.spd*2.2:w.spd,p=1-P.atkT/full,arc=P.isHeavy&&P.weapon=='hammer'?Math.PI*2:w.arc*(P.isHeavy?1.4:1),dir=P.combo%2?-1:1;wa=f-dir*arc/2+dir*arc*cl(p*1.4-.2,0,1);
   if(p>.3&&p<.9){cx.strokeStyle=P.isHeavy?'rgba(255,80,60,.5)':P.weapon=='rune'?'rgba(127,180,255,.45)':'rgba(220,230,255,.35)';cx.lineWidth=P.isHeavy?10:6;cx.beginPath();cx.arc(x,y-2,w.rng*.9,wa-dir*.9,wa,dir<0);cx.stroke()}}
  else wa=-Math.PI/2+(flip?-.45:.45)+Math.sin(P.wph*Math.PI/2)*.08+Math.sin(t*2)*.03;
