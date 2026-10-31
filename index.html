@@ -786,7 +786,7 @@ function aBeast(c,ph,m){const s=Math.sin(ph),k=Math.cos(ph),bk='#4a1a14',bd='#0e
  F(c,[-6,-29,10,-29,8,-23+(m?3:0),-4,-23+(m?3:0)],'#1a0402');E(c,2,-26+(m?1.5:0),5,2,rgr(c,2,-26,5,'#ffd060','#ff4010'));for(let i=0;i<6;i++){F(c,[-5+i*2.6,-29,-4+i*2.6,-25.5,-3+i*2.6,-29],'#f0e8d0');F(c,[-4+i*2.4,-23+(m?3:0),-3+i*2.4,-26+(m?3:0),-2+i*2.4,-23+(m?3:0)],'#e8dcc0')}}
 function beastGlow(c){c.save();c.shadowColor='#ff8030';c.shadowBlur=8*RES;for(let i=0;i<9;i++)crack(c,-18+i*4.5,-14+(i%3)*8,14,i+70,'#ffd080',1.4);E(c,0,-6,8,6,'rgba(255,160,60,.5)');E(c,2,-26,4,1.6,'#ffe090');c.restore()}
 const VL=k=>k=='axe'?22:k=='battle'?40:WEAPONS[k].rng*.75;
-function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};RES=8;for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}RES=3;loadHero()
+function bakeAll(){bakeSet('player',46,52,34,aPlayer);SPR.shield=bake(22,22,11,aShield);SPR.wp={};RES=8;for(const k in WEAPONS){const vl=VL(k);SPR.wp[k]=bake((vl+16)*2,60,30,aWeapon(k,vl))}RES=3;loadHero8()
  bakeSet('skeleton',40,46,30,aSkel);bakeSet('zombie',40,46,30,aZomb);bakeSet('wolf',56,34,20,(c,p,m)=>aWolf(c,p,m,0));bakeSet('spider',38,26,16,(c,p,m)=>aSpider(c,p,m,0));bakeSet('cyclops',76,90,58,aCyc);bakeSet('huscarl',50,52,32,aHus);bakeSet('brood',90,62,38,aBrood);
  bakeSet('jarl',96,104,72,aJarl);bakeSet('boneking',96,124,90,aBoneK);bakeSet('queen',104,90,56,(c,p,m)=>aQueen(c,p,m));bakeSet('fenrir',124,80,48,(c,p,m)=>aWolf(c,p,m,1));bakeSet('beast',150,150,98,aBeast);SPR.beastGlow=bake(150,150,98,beastGlow)}
 function frameOf(e,t){let m=0;const ty=e.type;
@@ -820,7 +820,7 @@ function drawPlayer(t){const x=P.x,y=P.y,f=P.face,w=WEAPONS[P.weapon];const mv=M
  const ws=SPR.wp[P.weapon],drawW=()=>{const bs=P.atkT>0?(P.combo%2?-1:1):(flip?-1:1),hp0=handPos(P.combo%2),hx=hp0.x,hy=hp0.y;cx.save();cx.translate(hx,hy);cx.rotate(wa);cx.scale(1,bs);cx.drawImage(ws.c,-ws.ox,-ws.oy,ws.w,ws.h);cx.restore()};
 const sw=P.atkT>0?(P.combo%2):-1,emp=h=>P.resp>0&&P.emp&&P.emp[h]>0&&(P.thH|0)==h;const rg=P.rage>0?(P.rage<3?.55+.45*Math.sin(t*28):1)*Math.min(1,P.rage*2,(20-P.rage)*4):(P.rgFade>0?P.rgFade:0);
  if(rg>0){const g=cx.createRadialGradient(x,y-4,4,x,y-4,30);g.addColorStop(0,`rgba(255,40,20,${.35*rg})`);g.addColorStop(1,'rgba(255,0,0,0)');cx.fillStyle=g;cx.fillRect(x-30,y-34,60,60);cx.shadowColor=`rgba(255,30,10,${rg})`;cx.shadowBlur=8}
- if(HERO.ok)drawHero(x,y,flip,P.hurtT>0,t,vsp,sw,emp);else spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);cx.shadowBlur=0;if(sw>=0&&!(P.resp>0))drawW();
+ if(H8.ok)drawHero8(x,y,P.hurtT>0,t,vsp,sw,emp);else if(HERO.ok)drawHero(x,y,flip,P.hurtT>0,t,vsp,sw,emp);else spr(SPR.player[fr],x,y,flip,1,1,P.hurtT>0);cx.shadowBlur=0;if(sw>=0&&!(P.resp>0))drawW();
  const hpp=handPos(P.popH|0),hx2=hpp.x,hy2=hpp.y+10;if(P.throwT>0){const p=1-P.throwT/.16,th=handPos(P.thH|0);cx.strokeStyle=`rgba(230,235,255,${.6*(1-p)})`;cx.lineWidth=3;cx.beginPath();cx.arc(th.x,th.y,12,f-2.4+p*1.6,f-.4+p*.4);cx.stroke()}
  if(P.popT>0){const k=P.popT/.22;cx.save();cx.globalCompositeOperation='lighter';cx.fillStyle=`rgba(150,200,255,${k*.7})`;cx.beginPath();cx.arc(hx2,hy2-12,6+(1-k)*14,0,7);cx.fill();cx.strokeStyle=`rgba(255,240,180,${k})`;cx.lineWidth=1.5;cx.beginPath();cx.arc(hx2,hy2-12,4+(1-k)*20,0,7);cx.stroke();cx.restore()}
  if(P.blocking)spr(SPR.shield,x+Math.cos(f)*12,y-2+Math.sin(f)*12,flip);
@@ -831,7 +831,7 @@ function loadHero(){if(HERO.im)return;const im=HERO.im=new Image();im.onload=()=
   const sil=document.createElement('canvas');sil.width=k.width;sil.height=hh;const s2=sil.getContext('2d');s2.drawImage(k,0,0);s2.globalCompositeOperation='source-in';s2.fillStyle='#07050a';s2.fillRect(0,0,k.width,hh);
   const o=document.createElement('canvas');o.width=k.width;o.height=hh;const oc=o.getContext('2d'),d=Math.max(1,hh/150);for(let i=0;i<8;i++){const an=i/8*6.283;oc.drawImage(sil,Math.cos(an)*d,Math.sin(an)*d)}oc.drawImage(k,0,0);
   const fl=document.createElement('canvas');fl.width=k.width;fl.height=hh;const fc=fl.getContext('2d');fc.drawImage(o,0,0);fc.globalCompositeOperation='source-atop';fc.fillStyle='rgba(255,236,226,.82)';fc.fillRect(0,0,k.width,hh);HERO.L.push(o);HERO.F.push(fl)}HERO.ok=1};im.src='hero.webp'}
-function handPos(h){const a=HERO.hands[h],fl=P.flip?-1:1,b=P.bob||0;return{x:P.x+a[0]*fl,y:P.y+a[1]+b}}
+function handPos(h){if(H8.ok){const a=H8.D[H8.dir].hands[h];return{x:P.x+a[0]+(H8.sx||0),y:P.y+a[1]+(H8.bob||0)}}const a=HERO.hands[h],fl=P.flip?-1:1,b=P.bob||0;return{x:P.x+a[0]*fl,y:P.y+a[1]+b}}
 function drawHero(x,y,flip,hurt,t,vsp,sw,emp){const mv=vsp>14||P.dashT>0,b=P.bob=mv?-Math.abs(Math.sin(P.wph*Math.PI/2))*1.6:Math.sin(t*2.2)*.35;
  const px=48*SC*DPR,li=px>150?0:px>75?1:2,im=(hurt?HERO.F:HERO.L)[li],w=HERO.w,h=HERO.h,top=HERO.top,sx=im.width/w,split=.58;
  const sway=Math.sin(t*3.1)*.05+Math.sin(P.wph*Math.PI)*(mv?.07:0)-(mv?Math.cos(P.face)*.06*(flip?-1:1):0);
@@ -839,6 +839,37 @@ function drawHero(x,y,flip,hurt,t,vsp,sw,emp){const mv=vsp>14||P.dashT>0,b=P.bob
  const sy=h*split;cx.drawImage(im,0,0,im.width,sy*sx,-w/2,-top,w,sy+.3);
  cx.save();cx.translate(0,-top+sy);cx.transform(1,0,sway,1,0,0);cx.drawImage(im,0,sy*sx,im.width,im.height-sy*sx,-w/2,0,w,h-sy);cx.restore();
  const ws=SPR.wp[P.weapon];for(let k=0;k<2;k++){if(k===sw||emp(k))continue;const [hx,hy,ra]=HERO.hands[k];cx.save();cx.translate(hx,hy);cx.rotate(ra+Math.sin(t*2+k)*.04+(mv?Math.sin(P.wph*Math.PI/2+k*3)*.12:0));cx.scale(.62,-.62);cx.drawImage(ws.c,-ws.ox+1.5,-ws.oy,ws.w,ws.h);cx.restore()}
+ cx.restore()}
+// ---------- 8-direction hero (cut from Dave's approved sprite sheets) ----------
+const H8={ok:0,M:{"FH":288,"CW":244,"d":{"down":[0,234,[[43.2,157.2],[189.0,174.0]],127.0],"dr":[290,211,[[24.0,168.0],[171.0,177.0]],107.0],"right":[580,210,[[153.0,150.0],[90.0,171.0]],104.0],"ul0":[870,202,[[45.0,171.0],[180.0,198.0]],104.0],"up":[1160,219,[[36.0,180.0],[174.0,171.0]],96.0],"dl":[1450,242,[[60.0,135.0],[168.0,192.0]],137.0]}},D:[],dir:2,ws:0,lt:0,ph:0};
+function loadHero8(){if(H8.im)return;const im=H8.im=new Image();im.onload=()=>{try{const M=H8.M,FH=M.FH,K=48/FH;
+ const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+ const prep=(src)=>{const out={L:[],F:[]};let s=src;for(const hh of[FH,144,72]){const k=mk(Math.round(src.width*hh/FH),hh),c=k.getContext('2d');c.imageSmoothingQuality='high';c.drawImage(s,0,0,k.width,k.height);s=k;
+   const sil=mk(k.width,hh),s2=sil.getContext('2d');s2.drawImage(k,0,0);s2.globalCompositeOperation='source-in';s2.fillStyle='#07050a';s2.fillRect(0,0,k.width,hh);
+   const o=mk(k.width,hh),oc=o.getContext('2d'),d=Math.max(1,hh/150);for(let i=0;i<8;i++){const an=i/8*6.283;oc.drawImage(sil,Math.cos(an)*d,Math.sin(an)*d)}oc.drawImage(k,0,0);
+   const fl=mk(k.width,hh),fc=fl.getContext('2d');fc.drawImage(o,0,0);fc.globalCompositeOperation='source-atop';fc.fillStyle='rgba(255,236,226,.82)';fc.fillRect(0,0,k.width,hh);out.L.push(o);out.F.push(fl)}return out};
+ const cut=(n,v,mir)=>{const [y,w]=M.d[n],c=mk(w,FH),g=c.getContext('2d');if(mir){g.translate(w,0);g.scale(-1,1)}g.drawImage(im,v*M.CW,y,w,FH,0,0,w,FH);return c};
+ // sector order: 0 right,1 down-right,2 down,3 down-left,4 left,5 up-left,6 up,7 up-right
+ const src=[['right',0],['dr',0],['down',0],['dl',0],['right',1],['ul0',0],['up',0],['ul0',1]];
+ H8.D=src.map(([n,mir])=>{const [y,w,hd,cxp]=M.d[n],ax=mir?w-cxp:cxp;
+   return{v:[0,1,2].map(v=>prep(cut(n,v,mir))),w:w*K,h:48,ox:ax*K,top:36,hands:hd.map(([hx,hy])=>[((mir?w-hx:hx)-ax)*K,hy*K-36])}});
+ H8.ok=1}catch(e){console.warn('hero8',e)}};im.onerror=()=>{H8.ok=0;loadHero()};im.src='hero8.webp'}
+function h8Sector(vx,vy,cur){const a=Math.atan2(vy,vx),S=Math.PI/4;let d=Math.abs(((a-cur*S)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI);if(d<S/2+.14)return cur;return((Math.round(a/S)%8)+8)%8}
+function drawHero8(x,y,hurt,t,vsp,sw,emp){const dt=Math.min(.05,Math.max(0,t-(H8.lt||t)));H8.lt=t;
+ const mv=vsp>14||P.dashT>0,tgt=mv?Math.min(1,vsp/90):0;H8.ws+=(tgt-H8.ws)*Math.min(1,dt*9);const s=H8.ws;
+ if(mv)H8.dir=h8Sector(P.vx||0,P.vy||0,H8.dir);else if(P.throwT>0||P.atkT>0)H8.dir=h8Sector(Math.cos(P.face),Math.sin(P.face),H8.dir);
+ H8.ph+=dt*(4+7*s)*(s>.02?1:0)*Math.PI*.55;const ph=H8.ph;
+ const F=H8.D[H8.dir];let vi=0;if(sw>=0)vi=sw+1;if(emp(0))vi=1;else if(emp(1))vi=2;
+ const px=48*SC*DPR,li=px>170?0:px>85?1:2,im=(hurt?F.v[vi].F:F.v[vi].L)[li],w=F.w,h=F.h,top=F.top,sc=im.height/h;
+ const breath=Math.sin(t*2.3),bob=-Math.abs(Math.sin(ph))*2.2*s+breath*.25*(1-s),foot=Math.pow(1-Math.abs(Math.sin(ph)),3)*s,
+  sqy=1-.045*foot+.012*breath*(1-s),sqx=1+.035*foot,ux=(P.vx||0)/(vsp||1),uy=(P.vy||0)/(vsp||1),lean=ux*.07*s,sway=Math.sin(ph)*.9*s;
+ let tilt=0;if(P.throwT>0){const p=P.throwT/.16;tilt=(P.thH?1:-1)*.07*Math.sin(p*Math.PI)}
+ H8.bob=bob;H8.sx=sway;
+ cx.save();cx.translate(x+sway,y+12+bob*.0);cx.rotate(lean+tilt+Math.sin(ph)*.025*s);cx.scale(sqx,sqy);cx.translate(0,bob);cx.imageSmoothingQuality='high';
+ const split=.64,sy=h*split,X0=-F.ox,Y0=-48;
+ cx.drawImage(im,0,0,im.width,sy*sc,X0,Y0,w,sy+.4);
+ const n=3,lh=(h-sy)/n,cl=-ux*.22*s+Math.sin(t*3.1)*.03,shuf=Math.sin(ph)*.16*s*(Math.abs(ux)>.3?.5:1);
+ for(let i=0;i<n;i++){const y0=sy+i*lh,k=(i+1)/n;cx.save();cx.translate(0,Y0+y0);cx.transform(1,0,cl*k+shuf*(i==n-1?1:.5),1+(i==n-1?.02*foot:0),0,0);cx.drawImage(im,0,y0*sc,im.width,lh*sc+(i<n-1?1:0),X0,0,w,lh+(i<n-1?.4:0));cx.restore()}
  cx.restore()}
 function drawTitleBg(t){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b1020');g.addColorStop(.7,'#1a0a0c');g.addColorStop(1,'#050506');cx.fillStyle=g;cx.fillRect(0,0,W,H);
  if(Math.sin(t*1.3)>.985){cx.fillStyle='rgba(180,210,255,.15)';cx.fillRect(0,0,W,H)}
