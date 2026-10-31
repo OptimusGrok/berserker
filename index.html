@@ -63,7 +63,7 @@ document.addEventListener('touchmove',e=>{if(!e.target.closest('.ov'))e.preventD
 document.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
 // ---------- audio ----------
 let AC,master,musG,sfxG,musOn=(localStorage.getItem('berserker_mus2')?localStorage.getItem('berserker_mus')!=='0':(localStorage.setItem('berserker_mus2','1'),localStorage.removeItem('berserker_mus'),true)),sfxOn=true;
-function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=musOn?.35:0;musG.connect(master);sfxG=AC.createGain();sfxG.connect(master);bakeAxe();loadBIO()}catch(e){}}
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.5;master.connect(AC.destination);musG=AC.createGain();musG.gain.value=musOn?.35:0;musG.connect(master);sfxG=AC.createGain();sfxG.gain.value=.5;sfxG.connect(master);bakeAxe();loadBIO()}catch(e){}}
 function tone(f,d,ty='square',v=.2,f2,dest){if(!AC||(!dest&&!sfxOn))return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest||sfxG);o.start(t);o.stop(t+d+.02)}
 let NB;function noise(d,v=.3,fr=1200,dest,when){if(!AC||(!dest&&!sfxOn))return;if(!NB){NB=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const a=NB.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}const t=when||AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;f.type='lowpass';f.frequency.value=fr;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||sfxG);s.start(t);s.stop(t+d+.02)}
 // ---------- axe-throw SFX (A Classic / C Rune), pre-rendered once ----------
@@ -801,7 +801,7 @@ function drawFring(f,t){if(!FRS)FRS=[vGlowSpr(24,[[0,'rgba(255,240,180,1)'],[.3,
    cx.globalAlpha=a*(.9-u*.6)*(back?.7:1);cx.drawImage(FRS[0],x-w+Math.sin(t*7+i+k)*1.5,y-h*.9-u*8,w*2,h*1.5)}}
  cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
 let RN=null;function rainSnd(){const want=(G.rain>0&&G.stage==0&&G.state=='play'&&sfxOn&&AC)?G.rain*.09:0;
- if(!RN){if(!want)return;try{noise(.01,.0001);const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.5;g.gain.value=0;s.connect(f);f.connect(g);g.connect(master);s.start();RN={s,g}}catch(e){return}}
+ if(!RN){if(!want)return;try{noise(.01,.0001);const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.frequency.value=2600;f.Q.value=.5;g.gain.value=0;s.connect(f);f.connect(g);g.connect(sfxG);s.start();RN={s,g}}catch(e){return}}
  RN.g.gain.setTargetAtTime(want,AC.currentTime,.3)}
 function drawRain(t){const r=G.rain;cx.fillStyle=`rgba(18,34,62,${.22*r})`;cx.fillRect(0,0,W,H);
  const n=Math.round(Math.min(160,W*H/2600)*r);cx.strokeStyle='rgba(185,205,235,.38)';cx.lineWidth=1;cx.beginPath();
