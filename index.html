@@ -47,7 +47,7 @@ button.red{border-color:#b3121b;background:#2a0d10}
 <div id="cheat" class="ov"><h2>Raven's Secrets</h2>
  <button id="cInv">Invincibility: OFF</button><button id="cFF">Fast Forward: OFF</button><button id="cBoss">Skip to Boss: OFF</button>
  <button id="cBack">Back</button></div>
-<div id="pause" class="ov"><h2>Paused</h2><p id="credits" style="position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;margin:0 12px;font-size:11px;opacity:.6">Credits &middot; Music: 'Varyag War Drum' by Tausdei (Tausdei Music), CC-BY 3.0, via OpenGameArt.org</p><button id="resume">Resume</button><button id="mute">Music: ON</button><button id="sfx">Sound FX: ON</button><button class="red" id="quit">Quit to Title</button></div>
+<div id="pause" class="ov"><h2>Paused</h2><p id="credits" style="position:absolute;bottom:calc(10px + env(safe-area-inset-bottom));left:0;right:0;margin:0 12px;font-size:11px;opacity:.6">Credits &middot; Title music: 'Viking March' by nightm4re, CC0 &middot; Music: 'Varyag War Drum' by Tausdei (Tausdei Music), CC-BY 3.0, via OpenGameArt.org</p><button id="resume">Resume</button><button id="mute">Music: ON</button><button id="sfx">Sound FX: ON</button><button class="red" id="quit">Quit to Title</button></div>
 <div id="shop" class="ov"><h2>The Market</h2><p id="gold"></p><p style="font-size:13px">Blessings</p><div class="grid" id="bless"></div><p style="font-size:13px">Weapons</p><div class="grid" id="weap"></div><button class="red" id="next">Onward</button></div>
 <div id="dead" class="ov"><h1 style="font-size:clamp(34px,10vw,64px)">YOU HAVE FALLEN</h1><p id="dstat"></p><button class="red" id="again">Rise Again</button><button id="dtitle">Title</button></div>
 <div id="win" class="ov"><h1 style="color:#c9a96e;font-size:clamp(34px,11vw,72px)">VALHALLA</h1><p>The Beast is slain. The halls of Odin open for you.</p><p id="wstat"></p><button class="red" id="wtitle">Title</button></div>
@@ -820,9 +820,9 @@ function loop(now){rainSnd();let dt=Math.min(.05,(now-last)/1000);last=now;
  draw();requestAnimationFrame(loop)}
 // ---------- menus ----------
 function togglePause(){if(G.state=='play'){G.state='pause';showUI(false);ov('pause');if(VM)VM.pause()}else if(G.state=='pause'){G.state='play';ov(null);showUI(true);if(VM&&musOn)VM.play().catch(()=>{})}}
-$('play').onclick=()=>{initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}stopTV();ov(null);if(!introDone){introDone=1;playIntro(newRun)}else newRun()};$('again').onclick=()=>{ov(null);newRun()};
+$('play').onclick=()=>{tmStop();initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}stopTV();ov(null);if(!introDone){introDone=1;playIntro(newRun)}else newRun()};$('again').onclick=()=>{ov(null);newRun()};
 const toTitle=()=>{G.state='title';P=null;showUI(false);music(false);showBest();ov('title');startTV()};$('dtitle').onclick=$('wtitle').onclick=$('quit').onclick=toTitle;
-$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(VM){vmFade(musOn?VMV:0,.4);if(musOn&&G.state=='play')VM.play().catch(()=>{})}if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF')};
+$('resume').onclick=togglePause;$('mute').onclick=()=>{musOn=!musOn;localStorage.setItem('berserker_mus',musOn?'1':'0');if(VM){vmFade(musOn?VMV:0,.4);if(musOn&&G.state=='play')VM.play().catch(()=>{})}if(musG)musG.gain.value=musOn?.35:0;$('mute').textContent='Music: '+(musOn?'ON':'OFF');if(!musOn)TM.pause()};
 $('sfx').onclick=()=>{sfxOn=!sfxOn;$('sfx').textContent='Sound FX: '+(sfxOn?'ON':'OFF')};
 const tv=$('tv');let tvOk=true;$('title').classList.add('vid');
 tv.addEventListener('error',()=>{tvOk=false;$('title').classList.remove('vid')});
@@ -830,14 +830,18 @@ $('mute').textContent='Music: '+(musOn?'ON':'OFF');
 localStorage.removeItem('berserker_tvmute');
 // sound unlock: try unmuted autoplay; else muted + unmute on first gesture of any kind
 let sndOn=0;
-function tryUnlock(){initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}
- if(tv.getAttribute('src')&&G.state=='title'){tv.muted=false;tv.volume=1;const p=tv.play();if(p&&p.catch)p.catch(()=>{})}
- if(AC&&AC.state=='running'&&(!tv.getAttribute('src')||!tv.muted))unlockDone()}
+const TM=new Audio();TM.loop=true;TM.preload='auto';TM.src='title_music.m4a';TM.volume=.8;let TMfi=null;
+function tmPlay(){if(!musOn||G.state!='title'||document.hidden)return;clearInterval(TMfi);TM.volume=.8;try{const p=TM.play();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
+function tmStop(){clearInterval(TMfi);const f0=TM.volume,t0=performance.now();TMfi=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/600);TM.volume=Math.max(0,f0*(1-k));if(k>=1){clearInterval(TMfi);TM.pause();TM.volume=.8}},40)}
+const tmOk=()=>!musOn||G.state!='title'||!TM.paused;
+function tryUnlock(){tmPlay();initAudio();if(AC&&AC.state!='running'){try{AC.resume()}catch(_){}}
+ if(tv.getAttribute('src')&&G.state=='title'){tv.muted=false;tv.volume=.3;const p=tv.play();if(p&&p.catch)p.catch(()=>{})}
+ if(AC&&AC.state=='running'&&(!tv.getAttribute('src')||!tv.muted)&&tmOk())unlockDone()}
 const UEV=['pointerdown','touchstart','touchend','click','keydown'];
-function onGest(){tryUnlock();setTimeout(()=>{if(AC&&AC.state=='running'&&!tv.muted)unlockDone()},300)}
+function onGest(){tryUnlock();setTimeout(()=>{if(AC&&AC.state=='running'&&!tv.muted&&tmOk())unlockDone()},300)}
 function unlockDone(){if(sndOn)return;sndOn=1;UEV.forEach(t=>{window.removeEventListener(t,onGest,true)})}
 UEV.forEach(t=>window.addEventListener(t,onGest,{capture:true,passive:true}));
-(function(){tv.muted=false;tv.volume=1;const p=tv.play();const fb=()=>{tv.muted=true;tv.play().catch(()=>{})};
+(function(){tmPlay();tv.muted=false;tv.volume=.3;const p=tv.play();const fb=()=>{tv.muted=true;tv.play().catch(()=>{})};
  if(p&&p.then)p.then(()=>{initAudio();if(AC)AC.resume().catch(()=>{})}).catch(fb);
  if(navigator.userActivation&&navigator.userActivation.hasBeenActive)tryUnlock()})();
 let introDone=0;
@@ -848,11 +852,11 @@ function playIntro(cb){const w=document.createElement('div');w.id='intro';const 
  v.onended=fin;v.onerror=fin;w.onpointerdown=e=>{e.stopPropagation();e.preventDefault();fin()};
  const pr=v.play();if(pr&&pr.catch)pr.catch(()=>{v.muted=true;v.play().then(()=>{const u=()=>{v.muted=false;v.volume=1};window.addEventListener('touchend',u,{capture:true,once:true});window.addEventListener('click',u,{capture:true,once:true})}).catch(fin)})}
 function stopTV(){tv.pause();tv.removeAttribute('src');tv.load()}
-function startTV(){if(!tvOk)return;tv.src='title.mp4';tv.muted=false;tv.volume=1;tv.play().catch(()=>{tv.muted=true;tv.play().catch(()=>{})})}
+function startTV(){if(!tvOk)return;tv.src='title.mp4';tv.muted=false;tv.volume=.3;tmPlay();tv.play().catch(()=>{tv.muted=true;tv.play().catch(()=>{})})}
 let rav=0,ravT=0;$('raven').onclick=()=>{const n=performance.now();if(n-ravT>1500)rav=0;ravT=n;rav++;tone(600+rav*100,.08,'triangle',.1);if(rav>=5){rav=0;ov('cheat')}};
 const cupd=()=>{$('cInv').textContent='Invincibility: '+(cheat.inv?'ON':'OFF');$('cFF').textContent='Fast Forward: '+(cheat.ff?'ON':'OFF');$('cBoss').textContent='Skip to Boss: '+(cheat.boss?'ON':'OFF')};
 $('cInv').onclick=()=>{cheat.inv=!cheat.inv;cupd()};$('cFF').onclick=()=>{cheat.ff=!cheat.ff;cupd()};$('cBoss').onclick=()=>{cheat.boss=!cheat.boss;cupd()};$('cBack').onclick=()=>ov('title');
-document.addEventListener('visibilitychange',()=>{if(document.hidden){if(G.state=='play')togglePause();if(VM)VM.pause()}else if(VM&&musOn&&(G.state=='play'||G.state=='intro'))VM.play().catch(()=>{})});
-window.__B={draw:()=>draw(),G:()=>G,P:()=>P,ens:()=>ens,cheat,openShop,renderShop,tgt:()=>tgt,cam:()=>cam};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)TM.pause();else tmPlay();if(document.hidden){if(G.state=='play')togglePause();if(VM)VM.pause()}else if(VM&&musOn&&(G.state=='play'||G.state=='intro'))VM.play().catch(()=>{})});
+window.__B={TM,draw:()=>draw(),G:()=>G,P:()=>P,ens:()=>ens,cheat,openShop,renderShop,tgt:()=>tgt,cam:()=>cam};
 resize();bakeAll();showBest();requestAnimationFrame(loop);
 </script></body></html>
